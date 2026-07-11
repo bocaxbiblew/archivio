@@ -1044,7 +1044,7 @@ body {
 /* Smartphone Scale 75% */
 @media (max-width: 768px) {
   html, body {
-    zoom: 0.75;
+    zoom: 0.88;
   }
   .hero-content {
     padding-top: 6rem;
