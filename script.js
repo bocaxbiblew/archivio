@@ -8,6 +8,23 @@ if (!authData && !window.location.pathname.includes('login.html')) {
 }
 const currentUser = authData ? JSON.parse(authData) : null;
 
+// --- SESSION VERIFICATION ---
+if (currentUser && !window.location.pathname.includes('login.html')) {
+  fetch(`${API_BASE}/verify-session`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.valid) {
+      localStorage.removeItem('user_auth');
+      window.location.href = 'login.html';
+    }
+  })
+  .catch(err => console.error("Session verification failed:", err));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // --- UI/UX & Navbar Scroll ---
   window.addEventListener('scroll', () => {
@@ -1271,18 +1288,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${epImg}" alt="${ep.name}" loading="lazy">
                 <div class="play-icon"><i class='bx bx-play'></i></div>
               </div>
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                <div class="episode-title" style="margin-bottom:0; padding-right:10px;">E${ep.episode_number}: ${ep.name}</div>
-                <div class="watched-toggle" data-season="${seasonNumber}" data-episode="${ep.episode_number}" style="font-size: 24px; color: ${isWatched ? '#4CAF50' : 'rgba(255,255,255,0.4)'}; cursor: pointer; transition: color 0.2s; display:flex; align-items:center;" title="${isWatched ? 'Segna come da vedere' : 'Segna come visto'}">
-                  <i class='bx bxs-check-circle'></i>
+              <div class="episode-card-body">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                  <div class="episode-title" style="margin-bottom:0; padding-right:10px;">E${ep.episode_number}: ${ep.name}</div>
+                  <div class="watched-toggle" data-season="${seasonNumber}" data-episode="${ep.episode_number}" style="font-size: 24px; color: ${isWatched ? '#4CAF50' : 'rgba(255,255,255,0.4)'}; cursor: pointer; transition: color 0.2s; display:flex; align-items:center;" title="${isWatched ? 'Segna come da vedere' : 'Segna come visto'}">
+                    <i class='bx bxs-check-circle'></i>
+                  </div>
                 </div>
+                <div class="episode-meta" style="gap: 5px;">
+                  <span>${ep.runtime ? ep.runtime + ' min' : 'TBA'}</span>
+                  ${ep.air_date ? `<span>&bull;</span><span>${ep.air_date.substring(0,4)}</span>` : ''}
+                  ${ep.vote_average > 0 ? `<span>&bull;</span><span><i class='bx bxs-star' style='color:#f5c518'></i> ${ep.vote_average.toFixed(1)}</span>` : ''}
+                </div>
+                <div class="episode-desc">${ep.overview || ''}</div>
               </div>
-              <div class="episode-meta" style="gap: 5px;">
-                <span>${ep.runtime ? ep.runtime + ' min' : 'TBA'}</span>
-                ${ep.air_date ? `<span>&bull;</span><span>${ep.air_date.substring(0,4)}</span>` : ''}
-                ${ep.vote_average > 0 ? `<span>&bull;</span><span><i class='bx bxs-star' style='color:#f5c518'></i> ${ep.vote_average.toFixed(1)}</span>` : ''}
-              </div>
-              <div class="episode-desc">${ep.overview || ''}</div>
             `;
             
             // Trova se abbiamo il link nel nostro DB per questa stagione/episodio
@@ -1323,8 +1342,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch(`${API_BASE}/get-link`, {
                   method: 'POST',
                   headers: {'Content-Type':'application/json'},
-                  body: JSON.stringify({ user_id: currentUser.id, catalog_id: linkData.id })
-                }).catch(e => console.error("Errore log attività:", e));
+                  body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, catalog_id: linkData.id, otp_code: currentUser.otp_code })
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.error === 'UNAUTHORIZED') {
+                    localStorage.removeItem('user_auth');
+                    window.location.href = 'login.html';
+                  }
+                })
+                .catch(e => console.error("Errore log attività:", e));
               });
             } else {
               imgWrapper.style.opacity = '0.4';
@@ -1584,8 +1611,16 @@ document.addEventListener('DOMContentLoaded', () => {
           fetch(`${API_BASE}/get-link`, {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ user_id: currentUser.id, catalog_id: mainLinkData.id })
-          }).catch(e => console.error("Errore log attività:", e));
+            body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, catalog_id: mainLinkData.id, otp_code: currentUser.otp_code })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.error === 'UNAUTHORIZED') {
+              localStorage.removeItem('user_auth');
+              window.location.href = 'login.html';
+            }
+          })
+          .catch(e => console.error("Errore log attività:", e));
         });
       } else {
         mainPlayBtn.style.opacity = '0.5';
@@ -1826,31 +1861,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let activeHtml = data.active.map(u => `<div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${u.username || 'Senza nome'} (ID: ${u.id})</span> <span style="color:#4CAF50;">● Online</span></div>`).join('');
             
-            window.adminLogoutUser = async function(targetId) {
-              if(!confirm('Sei sicuro di voler forzare il logout di questo utente? Dovrà reinserire il codice.')) return;
-              try {
-                const res = await fetch(`${API_BASE}/admin/users/logout`, {
-                  method: 'POST',
-                  headers: {'Content-Type': 'application/json'},
-                  body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code, target_user_id: targetId })
-                });
-                const d = await res.json();
-                if(d.success) {
-                  alert('Utente disconnesso con successo!');
-                  document.getElementById('admin-modal').style.display='none';
-                  adminBtn.click(); // Ricarica la modale
-                } else {
-                  alert('Errore: ' + d.error);
-                }
-              } catch(e) {
-                alert('Errore di rete');
-              }
-            };
-
             let allHtml = data.all.map(u => `
               <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
                 <span>${u.username || 'Senza nome'} <span style="color:#aaa; font-size:0.8rem;">(ID: ${u.id})</span></span>
-                <button onclick="adminLogoutUser('${u.id}')" style="background:#d32f2f; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class='bx bx-exit'></i> Scollega</button>
+                <button class="admin-logout-btn" data-id="${u.id}" style="background:#d32f2f; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class='bx bx-exit'></i> Scollega</button>
               </div>
             `).join('');
             
@@ -1882,6 +1896,41 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             adminOverlay.style.display = 'flex';
             dropdown.style.display = 'none'; // chiudi dropdown
+            
+            // Event delegation per i tasti di logout
+            adminOverlay.onclick = async function(e) {
+              const btn = e.target.closest('.admin-logout-btn');
+              if (btn) {
+                const targetId = btn.getAttribute('data-id');
+                if(!confirm('Sei sicuro di voler forzare il logout di questo utente? Dovrà reinserire il codice.')) return;
+                
+                // Disabilita tasto durante chiamata
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                  const res = await fetch(`${API_BASE}/admin/users/logout`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code, target_user_id: targetId })
+                  });
+                  const d = await res.json();
+                  if (d.success) {
+                    alert('Utente disconnesso con successo!');
+                    adminOverlay.style.display = 'none';
+                    adminBtn.click(); // Ricarica modale
+                  } else {
+                    alert('Errore: ' + d.error);
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                  }
+                } catch(err) {
+                  alert('Errore di rete');
+                  btn.disabled = false;
+                  btn.style.opacity = '1';
+                }
+              }
+            };
           } else {
             alert("Errore Admin: " + data.error);
           }
