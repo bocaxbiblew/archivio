@@ -29,6 +29,22 @@ body {
   overflow-x: hidden;
 }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 /* NAVBAR */
 .navbar {
   position: fixed;
@@ -495,17 +511,23 @@ body {
   flex: 0 0 auto;
   width: 320px;
   cursor: pointer;
-  transition: var(--transition);
+  background: #181818;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 .episode-card:hover {
   transform: scale(1.02);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.6);
 }
 .episode-img-wrapper {
   position: relative;
   aspect-ratio: 16/9;
-  border-radius: var(--border-radius);
   overflow: hidden;
-  margin-bottom: 1rem;
+}
+.episode-card-body {
+  padding: 15px;
 }
 .episode-img-wrapper img {
   width: 100%;
