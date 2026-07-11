@@ -516,6 +516,7 @@ body {
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   transition: transform var(--transition), box-shadow var(--transition);
+  padding: 10px 10px 0 10px;
 }
 .episode-card:hover {
   transform: scale(1.02);
@@ -525,9 +526,11 @@ body {
   position: relative;
   aspect-ratio: 16/9;
   overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 .episode-card-body {
-  padding: 15px;
+  padding: 12px 4px 15px 4px;
 }
 .episode-img-wrapper img {
   width: 100%;
