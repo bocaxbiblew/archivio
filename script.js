@@ -1,5 +1,5 @@
 // API Backend sempre sulla VPS
-const API_BASE = 'http://37.59.119.176:3000/api';
+const API_BASE = 'https://api-archivio.duckdns.org/api';
 
 // --- AUTH CHECK ---
 const authData = localStorage.getItem('user_auth');
