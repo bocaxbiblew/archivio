@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Serie - HBO Max Clone</title>
+  <link rel="stylesheet" href="style.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Detail Top Nav -->
+  <nav class="detail-top-nav">
+    <a href="javascript:history.back()" class="icon-btn"><i class='bx bx-chevron-left'></i></a>
+    <button class="icon-btn" id="share-btn"><i class='bx bx-share-alt'></i></button>
+  </nav>
+
+  <!-- Hero Section specific to series -->
+  <header class="hero series-hero" id="detail-hero" style="background-image: none;">
+    <div class="hero-fade-overlay" id="hero-fade-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title-text" id="detail-title" style="font-family: serif; font-weight: normal; letter-spacing: 2px; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);">Loading...</h1>
+      
+      <div class="hero-meta" id="detail-meta">
+        <!-- Injected via JS -->
+      </div>
+      
+      <button id="main-play-btn" class="btn btn-primary primary-play-btn"><i class='bx bx-play'></i> Guarda S1 E1</button>
+      
+      <div class="btn-action-group">
+        <button class="action-btn">
+          <i class='bx bx-check'></i>
+          <span>La mia lista</span>
+        </button>
+        <button class="action-btn" id="valuta-btn">
+          <i class='bx bx-like'></i>
+          <span>Valuta</span>
+        </button>
+        <button class="action-btn" id="open-gallery-btn">
+          <i class='bx bx-dots-horizontal-rounded'></i>
+          <span>Immagini</span>
+        </button>
+      </div>
+
+      <p class="hero-desc" id="detail-desc">
+        Caricamento dettagli...
+      </p>
+    </div>
+  </header>
+
+    <!-- Season Selector -->
+    <section class="section" style="padding-bottom: 0.5rem; z-index: 10; position: relative;">
+      <div class="season-selector" id="season-selector-container">
+        <button class="season-btn" id="season-btn">Stagione 1 <i class='bx bx-chevron-down'></i></button>
+        <div class="dropdown-menu" id="season-dropdown">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+    
+    <!-- Episodes List -->
+    <section class="section" style="padding-top: 0;">
+      <div class="carousel-container" id="episodes-container">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

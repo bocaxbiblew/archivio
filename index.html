@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - HBO Max Clone</title>
+  <link rel="stylesheet" href="style.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <h2 class="logo" style="margin:0; font-weight:900; letter-spacing:2px; font-size:1.5rem; color:white; cursor:pointer;" onclick="window.location.href='index.html'">ARCHIVIO</h2>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="catalog_series.html">Serie</a></li>
+        <li><a href="catalog_movies.html">Film</a></li>
+        <li><a href="calendar.html">Calendario</a></li>
+      </ul>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="open-search"><i class='bx bx-search'></i></button>
+      <button class="icon-btn"><i class='bx bx-bookmark'></i></button>
+      <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar">
+    </div>
+  </nav>
+
+  <!-- Search Overlay -->
+  <div class="search-overlay" id="search-overlay">
+    <div class="search-container">
+      <button class="close-search" id="close-search"><i class='bx bx-x'></i></button>
+      <input type="text" id="search-input" placeholder="Cerca film, serie..." autocomplete="off">
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+
+  <!-- Hero Section Slider -->
+  <div class="hero-slider-container">
+    <div class="hero-slider" id="hero-slider">
+      <!-- Slides Injected via JS -->
+    </div>
+    <div class="slider-indicators" id="slider-indicators"></div>
+  </div>
+
+
+
+  <!-- In evidenza -->
+  <section class="section">
+    <h2 class="section-title">In evidenza</h2>
+    <div class="carousel-container" id="evidenza-carousel">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- TOP 10 SERIE OGGI -->
+  <section class="section">
+    <img src="top 10 serie.webp" alt="TOP 10 SERIE OGGI" class="section-logo-title">
+    <div class="carousel-container" id="top10-series-carousel">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- Tutte le serie -->
+  <section class="section">
+    <h2 class="section-title">Tutte le serie</h2>
+    <div class="carousel-container" id="all-series-carousel">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- TOP 10 FILM OGGI -->
+  <section class="section">
+    <img src="top 10 film.webp" alt="TOP 10 FILM OGGI" class="section-logo-title">
+    <div class="carousel-container" id="top10-movies-carousel">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <!-- Tutti i film -->
+  <section class="section" style="margin-bottom: 5rem;">
+    <h2 class="section-title">Tutti i film</h2>
+    <div class="carousel-container" id="all-movies-carousel">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>

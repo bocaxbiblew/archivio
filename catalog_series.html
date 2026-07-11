@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalogo Serie - HBO Max Clone</title>
+  <link rel="stylesheet" href="style.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <h2 class="logo" style="margin:0; font-weight:900; letter-spacing:2px; font-size:1.5rem; color:white; cursor:pointer;" onclick="window.location.href='index.html'">ARCHIVIO</h2>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="catalog_series.html" class="active">Serie</a></li>
+        <li><a href="catalog_movies.html">Film</a></li>
+        <li><a href="calendar.html">Calendario</a></li>
+      </ul>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn"><i class='bx bx-search'></i></button>
+      <button class="icon-btn"><i class='bx bx-bookmark'></i></button>
+      <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar">
+    </div>
+  </nav>
+
+  <header class="catalog-header">
+    <h1 class="catalog-title">Serie TV</h1>
+  </header>
+
+  <main class="catalog-grid" id="catalog-grid-series">
+    <!-- Locandine inserite via JS -->
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
