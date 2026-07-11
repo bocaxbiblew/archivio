@@ -1219,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API_BASE}/admin/metadata/update`, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ user_id: currentUser.id, otp_code: currentUser.otp_code, tmdb_id: id, quality_badge: newBadge.trim() })
+              body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code, tmdb_id: id, quality_badge: newBadge.trim() })
             });
             const updateData = await res.json();
             if (updateData.success) {
@@ -1270,11 +1270,13 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="episode-img-wrapper" style="position: relative;">
                 <img src="${epImg}" alt="${ep.name}" loading="lazy">
                 <div class="play-icon"><i class='bx bx-play'></i></div>
-                <div class="watched-toggle" data-season="${seasonNumber}" data-episode="${ep.episode_number}" style="position: absolute; bottom: 8px; right: 8px; font-size: 22px; color: ${isWatched ? '#4CAF50' : 'rgba(255,255,255,0.4)'}; cursor: pointer; background: rgba(0,0,0,0.7); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; z-index: 10; transition: color 0.2s;">
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <div class="episode-title" style="margin-bottom:0; padding-right:10px;">E${ep.episode_number}: ${ep.name}</div>
+                <div class="watched-toggle" data-season="${seasonNumber}" data-episode="${ep.episode_number}" style="font-size: 24px; color: ${isWatched ? '#4CAF50' : 'rgba(255,255,255,0.4)'}; cursor: pointer; transition: color 0.2s; display:flex; align-items:center;" title="${isWatched ? 'Segna come da vedere' : 'Segna come visto'}">
                   <i class='bx bxs-check-circle'></i>
                 </div>
               </div>
-              <div class="episode-title">E${ep.episode_number}: ${ep.name}</div>
               <div class="episode-meta" style="gap: 5px;">
                 <span>${ep.runtime ? ep.runtime + ' min' : 'TBA'}</span>
                 ${ep.air_date ? `<span>&bull;</span><span>${ep.air_date.substring(0,4)}</span>` : ''}
@@ -1395,6 +1397,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     } // FINE BLOCCO if (type === 'tv')
+
+    // Movie Watched Logic
+    if (type === 'movie') {
+      const movieWatchBtn = document.getElementById('movie-watched-btn');
+      if (movieWatchBtn) {
+        let isMovieWatched = false;
+        if (currentUser) {
+          try {
+            const res = await fetch(`${API_BASE}/episodes/watched/get`, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, tmdb_id: id })
+            });
+            const d = await res.json();
+            if (d.success) {
+              isMovieWatched = d.watched.some(w => w.season_number === 0 && w.episode_number === 0);
+            }
+          } catch(e) {}
+        }
+        
+        const updateMovieWatchUI = () => {
+          const icon = movieWatchBtn.querySelector('i');
+          const span = movieWatchBtn.querySelector('span');
+          if (isMovieWatched) {
+            icon.className = 'bx bxs-check-circle';
+            icon.style.color = '#4CAF50';
+            span.innerText = 'Visto';
+          } else {
+            icon.className = 'bx bx-hide';
+            icon.style.color = '';
+            span.innerText = 'Visto';
+          }
+        };
+        updateMovieWatchUI();
+
+        movieWatchBtn.addEventListener('click', async () => {
+          if (!currentUser) return alert('Devi effettuare il login per segnare i film visti!');
+          movieWatchBtn.style.opacity = '0.5';
+          try {
+            const res = await fetch(`${API_BASE}/episodes/watched/toggle`, {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, tmdb_id: id, season_number: 0, episode_number: 0 })
+            });
+            const data = await res.json();
+            if (data.success) {
+              isMovieWatched = data.watched;
+              updateMovieWatchUI();
+            }
+          } catch(e) {
+            console.error('Errore watch toggle movie:', e);
+          }
+          movieWatchBtn.style.opacity = '1';
+        });
+      }
+    }
 
 
 
@@ -1716,7 +1774,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const res = await fetch(`${API_BASE}/user/profile/update`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: currentUser.id, username: dName })
+            body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, username: dName })
           });
           const data = await res.json();
           if (data.success) {
@@ -1768,8 +1826,36 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let activeHtml = data.active.map(u => `<div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${u.username || 'Senza nome'} (ID: ${u.id})</span> <span style="color:#4CAF50;">● Online</span></div>`).join('');
             
+            window.adminLogoutUser = async function(targetId) {
+              if(!confirm('Sei sicuro di voler forzare il logout di questo utente? Dovrà reinserire il codice.')) return;
+              try {
+                const res = await fetch(`${API_BASE}/admin/users/logout`, {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code, target_user_id: targetId })
+                });
+                const d = await res.json();
+                if(d.success) {
+                  alert('Utente disconnesso con successo!');
+                  document.getElementById('admin-modal').style.display='none';
+                  adminBtn.click(); // Ricarica la modale
+                } else {
+                  alert('Errore: ' + d.error);
+                }
+              } catch(e) {
+                alert('Errore di rete');
+              }
+            };
+
+            let allHtml = data.all.map(u => `
+              <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+                <span>${u.username || 'Senza nome'} <span style="color:#aaa; font-size:0.8rem;">(ID: ${u.id})</span></span>
+                <button onclick="adminLogoutUser('${u.id}')" style="background:#d32f2f; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class='bx bx-exit'></i> Scollega</button>
+              </div>
+            `).join('');
+            
             adminOverlay.innerHTML = `
-              <div style="background:#1a1a1a; padding:30px; border-radius:10px; min-width:400px; max-width:600px; max-height:80vh; overflow-y:auto; position:relative; color:white; font-family:var(--font-family);">
+              <div style="background:#1a1a1a; padding:30px; border-radius:10px; min-width:450px; max-width:600px; max-height:85vh; overflow-y:auto; position:relative; color:white; font-family:var(--font-family);">
                 <button onclick="document.getElementById('admin-modal').style.display='none'" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
                 <h2 style="color:#f5c518; margin-top:0;"><i class='bx bx-crown'></i> Pannello Admin</h2>
                 <div style="display:flex; justify-content:space-between; margin-bottom: 20px; background:#2a2a2a; padding:15px; border-radius:8px;">
@@ -1782,9 +1868,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="font-size:0.8rem; color:#aaa;">Utenti Connessi (5m)</div>
                   </div>
                 </div>
+                
                 <h3 style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">Utenti Attivi Ora</h3>
-                <div style="background:#2a2a2a; border-radius:8px;">
+                <div style="background:#2a2a2a; border-radius:8px; margin-bottom: 20px;">
                   ${activeHtml || '<div style="padding:15px; color:#aaa; text-align:center;">Nessun utente attivo negli ultimi 5 minuti.</div>'}
+                </div>
+
+                <h3 style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">Tutti gli Utenti Registrati</h3>
+                <div style="background:#2a2a2a; border-radius:8px;">
+                  ${allHtml || '<div style="padding:15px; color:#aaa; text-align:center;">Nessun utente registrato.</div>'}
                 </div>
               </div>
             `;
