@@ -293,6 +293,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
+  // Helper per controllare se c'è un nuovo episodio (ultimi 7 giorni)
+  function checkNewEpisodeBadge(data, type) {
+    if (type === 'tv' && data.last_episode_to_air) {
+      const airDate = new Date(data.last_episode_to_air.air_date);
+      const diffTime = Date.now() - airDate.getTime();
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      if (diffDays >= 0 && diffDays <= 7) {
+        data.badge = "Nuovo Episodio";
+      }
+    }
+    if (type === 'tv' && data.next_episode_to_air) {
+      data.next_badge = "Nuovi Episodi in Arrivo";
+    }
+  }
+
   // Versione leggera per homepage/carousel: solo 1 chiamata TMDB (no metadata override)
   async function getDetailsLite(id, type) {
     const cacheKey = `lite-${type}-${id}`;
@@ -324,6 +339,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (itTranslation.data.title) data.title = itTranslation.data.title;
         }
       }
+
+      checkNewEpisodeBadge(data, type);
 
       cache.set(cacheKey, data);
       return data;
@@ -375,6 +392,8 @@ document.addEventListener('DOMContentLoaded', () => {
           data.images.logos.unshift({ file_path: metaData.metadata.logo_path, iso_639_1: 'it' });
         }
       }
+
+      checkNewEpisodeBadge(data, type);
 
       cache.set(cacheKey, data);
       return data;
@@ -1213,6 +1232,11 @@ document.addEventListener('DOMContentLoaded', () => {
       editBadgeHtml = `<i class='bx bx-pencil' id="edit-quality-btn" style="cursor:pointer; margin-left:5px; color:#f5c518;" title="Modifica Qualità Globale"></i>`;
     }
 
+    let newEpisodesBadge = '';
+    if (type === 'tv' && data.next_episode_to_air) {
+      newEpisodesBadge = `<div style="display:inline-block; margin-left:10px; background:#4CAF50; color:#fff; padding:2px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem; letter-spacing:0.5px; border:1px solid rgba(255,255,255,0.2);">Nuovi Episodi in Arrivo</div>`;
+    }
+
     let metaHtml = `
       <div class="age-rating">${data.adult ? '18+' : 'T'}</div>
       <div class="hero-tags">
@@ -1221,6 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${data.runtime ? `<span>${data.runtime} min</span>` : ''}
         <span style="border: 1px solid rgba(255,255,255,0.3); padding: 0 4px; border-radius: 2px;" id="quality-badge-display">${qualityBadge}</span>${editBadgeHtml}
         <span><i class="bx bxs-star" style="color: #f5c518;"></i> ${data.vote_average ? data.vote_average.toFixed(1) : 'N/A'}</span>
+        ${newEpisodesBadge}
       </div>
     `;
     const metaContainer = document.getElementById('detail-meta');
@@ -1861,6 +1886,19 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let activeHtml = data.active.map(u => `<div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${u.username || 'Senza nome'} (ID: ${u.id})</span> <span style="color:#4CAF50;">● Online</span></div>`).join('');
             
+            let statsHtml = `
+              <div style="display:flex; justify-content:space-around; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:20px;">
+                <div style="text-align:center;">
+                  <div style="font-size:2rem; font-weight:800; color:#fff;">${data.users_24h || 0}</div>
+                  <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Utenti (24h)</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:2rem; font-weight:800; color:#e50914;">${data.vlc_requests_24h || 0}</div>
+                  <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Link VLC (24h)</div>
+                </div>
+              </div>
+            `;
+
             let allHtml = data.all.map(u => `
               <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
                 <span>${u.username || 'Senza nome'} <span style="color:#aaa; font-size:0.8rem;">(ID: ${u.id})</span></span>
@@ -1869,27 +1907,21 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('');
             
             adminOverlay.innerHTML = `
-              <div style="background:#1a1a1a; padding:30px; border-radius:10px; min-width:450px; max-width:600px; max-height:85vh; overflow-y:auto; position:relative; color:white; font-family:var(--font-family);">
-                <button onclick="document.getElementById('admin-modal').style.display='none'" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
-                <h2 style="color:#f5c518; margin-top:0;"><i class='bx bx-crown'></i> Pannello Admin</h2>
-                <div style="display:flex; justify-content:space-between; margin-bottom: 20px; background:#2a2a2a; padding:15px; border-radius:8px;">
-                  <div style="text-align:center;">
-                    <div style="font-size:2rem; font-weight:bold;">${data.total}</div>
-                    <div style="font-size:0.8rem; color:#aaa;">Iscritti Totali</div>
-                  </div>
-                  <div style="text-align:center;">
-                    <div style="font-size:2rem; font-weight:bold; color:#4CAF50;">${data.active.length}</div>
-                    <div style="font-size:0.8rem; color:#aaa;">Utenti Connessi (5m)</div>
-                  </div>
+              <div style="background:#1a1a1a; padding:30px; border-radius:12px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; color:white; font-family:var(--font-main); border: 1px solid rgba(255,255,255,0.1); position:relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:20px;">
+                  <h2 style="margin:0; font-size:1.5rem;"><i class='bx bx-crown' style="color:#f5c518;"></i> Pannello Admin</h2>
+                  <button onclick="document.getElementById('admin-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;"><i class='bx bx-x'></i></button>
                 </div>
                 
-                <h3 style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">Utenti Attivi Ora</h3>
-                <div style="background:#2a2a2a; border-radius:8px; margin-bottom: 20px;">
-                  ${activeHtml || '<div style="padding:15px; color:#aaa; text-align:center;">Nessun utente attivo negli ultimi 5 minuti.</div>'}
-                </div>
+                ${statsHtml}
 
-                <h3 style="margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px;">Tutti gli Utenti Registrati</h3>
-                <div style="background:#2a2a2a; border-radius:8px;">
+                <h3 style="margin-bottom:15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i class='bx bxs-user-detail'></i> Utenti Attivi Ora (${data.active.length})</h3>
+                <div style="background:rgba(0,0,0,0.3); border-radius:8px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.05);">
+                  ${activeHtml || '<div style="padding:15px; color:#888; text-align:center;">Nessun utente attivo al momento.</div>'}
+                </div>
+                
+                <h3 style="margin-bottom:15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i class='bx bxs-group'></i> Tutti gli Utenti (${data.total})</h3>
+                <div style="background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
                   ${allHtml || '<div style="padding:15px; color:#aaa; text-align:center;">Nessun utente registrato.</div>'}
                 </div>
               </div>
