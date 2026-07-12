@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@900&display=swap');
+
 :root {
   --bg-color: #03030f;
   --bg-gradient: linear-gradient(180deg, rgba(3,3,15,0) 0%, #03030f 100%);
@@ -11,6 +13,7 @@
   --btn-secondary-bg: rgba(255, 255, 255, 0.1);
   --btn-secondary-hover: rgba(255, 255, 255, 0.2);
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-logo: 'Outfit', sans-serif;
   --border-radius: 6px;
   --transition: 0.3s ease;
   --nav-height: 70px;
@@ -74,6 +77,7 @@ body {
 .logo {
   height: 24px;
   cursor: pointer;
+  font-family: var(--font-logo) !important;
 }
 .nav-links {
   display: flex;
@@ -128,6 +132,7 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 1.5rem 2rem;
+  background: linear-gradient(180deg, rgba(3,3,15,0.85) 0%, rgba(3,3,15,0) 100%);
   z-index: 1000;
   transition: opacity var(--transition);
 }
@@ -516,7 +521,6 @@ body {
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   transition: transform var(--transition), box-shadow var(--transition);
-  padding: 10px 10px 0 10px;
 }
 .episode-card:hover {
   transform: scale(1.02);
@@ -526,11 +530,9 @@ body {
   position: relative;
   aspect-ratio: 16/9;
   overflow: hidden;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.08);
 }
 .episode-card-body {
-  padding: 12px 4px 15px 4px;
+  padding: 15px;
 }
 .episode-img-wrapper img {
   width: 100%;
@@ -1047,7 +1049,7 @@ body {
 /* Smartphone Scale 75% */
 @media (max-width: 768px) {
   html, body {
-    zoom: 0.88;
+    zoom: 0.75;
   }
   .hero-content {
     padding-top: 6rem;
