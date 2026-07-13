@@ -1416,36 +1416,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       await renderEpisodes(1);
 
-      const seasonBtn = document.getElementById('season-btn');
-      const dropdownMenu = document.getElementById('season-dropdown');
+      const seasonSelect = document.getElementById('season-select');
       
-      if (seasonBtn && dropdownMenu) {
+      if (seasonSelect) {
         if (data.seasons && data.seasons.length > 0) {
-          dropdownMenu.innerHTML = '';
+          seasonSelect.innerHTML = '';
           data.seasons.forEach(s => {
             if(s.season_number > 0) {
-              const item = document.createElement('div');
-              item.className = 'dropdown-item';
-              item.innerText = `Stagione ${s.season_number}`;
-              item.addEventListener('click', async (e) => {
-                seasonBtn.innerHTML = `${e.target.innerText} <i class='bx bx-chevron-down'></i>`;
-                dropdownMenu.classList.remove('show');
-                await renderEpisodes(s.season_number);
-              });
-              dropdownMenu.appendChild(item);
+              const option = document.createElement('option');
+              option.value = s.season_number;
+              option.innerText = `Stagione ${s.season_number}`;
+              seasonSelect.appendChild(option);
             }
           });
         }
 
-        seasonBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dropdownMenu.classList.toggle('show');
-        });
-
-        document.addEventListener('click', () => {
-          if (dropdownMenu.classList.contains('show')) {
-            dropdownMenu.classList.remove('show');
-          }
+        seasonSelect.addEventListener('change', async (e) => {
+          await renderEpisodes(e.target.value);
         });
       }
     } // FINE BLOCCO if (type === 'tv')

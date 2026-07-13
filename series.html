@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Serie - HBO Max Clone</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Serie - Archivio Stream</title>
+  <link rel="stylesheet" href="style.css?v=2">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -15,6 +15,14 @@
     <a href="javascript:history.back()" class="icon-btn"><i class='bx bx-chevron-left'></i></a>
     <button class="icon-btn" id="share-btn"><i class='bx bx-share-alt'></i></button>
   </nav>
+
+  <!-- Mobile Tab Bar (iOS style) -->
+  <div class="mobile-tab-bar">
+    <a href="index.html"><i class='bx bx-home'></i><span>Home</span></a>
+    <a href="catalog_series.html"><i class='bx bx-tv'></i><span>Serie</span></a>
+    <a href="catalog_movies.html"><i class='bx bx-film'></i><span>Film</span></a>
+    <a href="calendar.html"><i class='bx bx-calendar'></i><span>Uscite</span></a>
+  </div>
 
   <!-- Hero Section specific to series -->
   <header class="hero series-hero" id="detail-hero" style="background-image: none;">
@@ -51,11 +59,12 @@
 
     <!-- Season Selector -->
     <section class="section" style="padding-bottom: 0.5rem; z-index: 10; position: relative;">
-      <div class="season-selector" id="season-selector-container">
-        <button class="season-btn" id="season-btn">Stagione 1 <i class='bx bx-chevron-down'></i></button>
-        <div class="dropdown-menu" id="season-dropdown">
+      <div class="season-selector" id="season-selector-container" style="position: relative; display: inline-block;">
+        <select id="season-select" class="season-btn" style="appearance: none; -webkit-appearance: none; padding-right: 30px; cursor: pointer;">
           <!-- Injected via JS -->
-        </div>
+          <option value="1">Stagione 1</option>
+        </select>
+        <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: white;"></i>
       </div>
     </section>
     
