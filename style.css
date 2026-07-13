@@ -12,10 +12,10 @@
   --btn-bg-hover: rgba(255, 255, 255, 0.8);
   --btn-secondary-bg: rgba(255, 255, 255, 0.1);
   --btn-secondary-hover: rgba(255, 255, 255, 0.2);
-  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-logo: 'Outfit', sans-serif;
-  --border-radius: 6px;
-  --transition: 0.3s ease;
+  --border-radius: 12px;
+  --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   --nav-height: 70px;
 }
 
@@ -56,10 +56,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 3rem;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+  padding: 1rem 3rem;
+  background: rgba(3, 3, 15, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 1000;
-  transition: all 0.3s ease;
+  transition: background-color var(--transition);
 }
 .navbar.scrolled {
   background: rgba(3, 3, 15, 0.65);
@@ -103,7 +105,7 @@ body {
   background: none;
   border: none;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   cursor: pointer;
   opacity: 0.8;
   transition: var(--transition);
@@ -117,8 +119,8 @@ body {
   transform: scale(1.1);
 }
 .profile-avatar {
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   cursor: pointer;
   object-fit: cover;
@@ -494,15 +496,24 @@ body {
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 5px;
-  background-color: #1a1a1a;
+  margin-top: 8px;
+  background-color: rgba(25, 25, 25, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px;
-  min-width: 150px;
-  z-index: 100;
+  border-radius: var(--border-radius);
+  min-width: 180px;
+  z-index: 10000;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 .dropdown-menu.show {
   display: block;
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .dropdown-item {
   padding: 1rem 1.5rem;
@@ -1046,12 +1057,92 @@ body {
   font-weight: 600;
 }
 
-/* Smartphone Scale 75% */
+/* Smartphone Scale 0.88 & iOS Bottom Tab Bar */
 @media (max-width: 768px) {
   html, body {
     zoom: 0.88;
+    padding-bottom: 90px; /* Spazio per la tab bar inferiore */
   }
   .hero-content {
     padding-top: 6rem;
   }
+  
+  /* Nascondi la navbar centrale sui dispositivi mobili (nav-links) */
+  .navbar .nav-links {
+    display: none;
+  }
+  
+  /* Riduci il padding della navbar in alto su mobile */
+  .navbar {
+    padding: 1rem 1.5rem;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Bottom Tab Bar (iOS style) */
+  .mobile-tab-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 15, 15, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 9999;
+    justify-content: space-around;
+    padding: 12px 10px 25px 10px; /* Più spazio sotto per la safe area iOS */
+  }
+  
+  .mobile-tab-bar a {
+    color: var(--text-muted);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  .mobile-tab-bar a.active {
+    color: var(--text-color);
+  }
+  
+  .mobile-tab-bar a i {
+    font-size: 1.4rem;
+  }
+  
+  /* Action Sheet iOS per il menu stagioni */
+  .season-selector .dropdown-menu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    padding-bottom: 40px; /* Spazio extra per safe area iPhone */
+    background: rgba(30, 30, 30, 0.9);
+  }
+  .season-selector .dropdown-menu.show {
+    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .dropdown-item {
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 1.1rem;
+    padding: 1.2rem;
+  }
+}
+
+.mobile-tab-bar {
+  display: none; /* Nascosta su desktop */
 }
