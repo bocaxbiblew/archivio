@@ -3,99 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendario Uscite - Antigravity</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Calendario Uscite - Archivio Stream</title>
+  <link rel="stylesheet" href="style.css?v=3">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <style>
     .calendar-container {
-      padding: 120px 5% 50px 5%;
+      padding: 100px 5% 50px 5%;
       min-height: 80vh;
+      max-width: 700px;
+      margin: 0 auto;
     }
     .calendar-title {
-      font-size: 2.5rem;
-      margin-bottom: 2rem;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
       font-weight: 800;
-      text-align: center;
     }
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 20px;
-    }
-    .calendar-card {
-      background: #111;
-      border-radius: 12px;
-      overflow: hidden;
+    .calendar-list {
       display: flex;
       flex-direction: column;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      gap: 12px;
+    }
+    .calendar-card {
+      background: rgba(30, 30, 30, 0.6);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      gap: 14px;
       text-decoration: none;
       color: white;
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      transition: background 0.2s ease;
+      border: 1px solid rgba(255,255,255,0.04);
     }
     .calendar-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      border-color: rgba(255,255,255,0.15);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+      background: rgba(50, 50, 50, 0.6);
     }
-    .cal-img-wrapper {
-      position: relative;
-      aspect-ratio: 2/3;
-      width: 100%;
-    }
-    .cal-img-wrapper::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 50%;
-      background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-    }
-    .cal-img-wrapper img {
-      width: 100%;
-      height: 100%;
+    .cal-poster {
+      width: 75px;
+      height: 75px;
+      border-radius: 10px;
       object-fit: cover;
-    }
-    .cal-date-badge {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: #f5c518;
-      color: #000;
-      padding: 4px 10px;
-      font-weight: 800;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      z-index: 2;
+      flex-shrink: 0;
     }
     .cal-info {
-      padding: 15px;
+      flex: 1;
+      min-width: 0;
     }
     .cal-series-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      margin-bottom: 5px;
-      color: var(--primary-accent);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
     }
     .cal-ep-title {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 5px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .cal-ep-meta {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
-      margin-bottom: 10px;
     }
-    .cal-overview {
-      font-size: 0.85rem;
-      color: #aaa;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+    .cal-bell {
+      font-size: 1.6rem;
+      color: #f5c518;
+      flex-shrink: 0;
+      margin-left: 8px;
     }
     #loading-calendar {
       text-align: center;
@@ -124,19 +99,27 @@
     </div>
   </nav>
 
+  <!-- Mobile Tab Bar (iOS style) -->
+  <div class="mobile-tab-bar">
+    <a href="index.html"><i class='bx bx-home'></i><span>Home</span></a>
+    <a href="catalog_series.html"><i class='bx bx-tv'></i><span>Serie</span></a>
+    <a href="catalog_movies.html"><i class='bx bx-film'></i><span>Film</span></a>
+    <a href="calendar.html" class="active"><i class='bx bxs-calendar'></i><span>Uscite</span></a>
+  </div>
+
   <!-- CALENDAR CONTAINER -->
   <div class="calendar-container">
     <h1 class="calendar-title">Prossime Uscite</h1>
     
     <div id="loading-calendar"><i class='bx bx-loader-alt bx-spin' style="font-size: 2rem;"></i><br>Ricerca prossimi episodi...</div>
-    <div class="calendar-grid" id="calendar-grid">
+    <div class="calendar-list" id="calendar-grid">
       <!-- Injected via JS -->
     </div>
   </div>
 
   <div id="toast" class="toast">Azione completata</div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCalendar();
