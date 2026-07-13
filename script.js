@@ -1727,7 +1727,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="cal-info">
             <div class="cal-series-title">${ep.series_title}</div>
             <div class="cal-ep-title">S${ep.season_number} E${ep.episode_number}: ${ep.episode_title}</div>
-            <div class="cal-ep-meta"><i class='bx bx-calendar'></i> ${dateStr}</div>
+            <div class="cal-ep-meta">${dateStr}</div>
             <div class="cal-overview">${ep.overview || 'Nessuna trama disponibile.'}</div>
           </div>
         `;
@@ -1899,12 +1899,16 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             `;
 
-            let allHtml = data.all.map(u => `
-              <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-                <span>${u.username || 'Senza nome'} <span style="color:#aaa; font-size:0.8rem;">(ID: ${u.id})</span></span>
-                <button class="admin-logout-btn" data-id="${u.id}" style="background:#d32f2f; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class='bx bx-exit'></i> Scollega</button>
+            let allHtml = data.all.map(u => {
+              const statusHtml = u.otp_code 
+                ? `<button class="admin-logout-btn" data-id="${u.id}" style="background:#d32f2f; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class='bx bx-exit'></i> Scollega</button>`
+                : `<span style="color:#e65100; font-size:0.8rem; font-weight:bold; background:rgba(230,81,0,0.1); padding:4px 8px; border-radius:4px;"><i class='bx bx-error-circle'></i> Disconnesso</span>`;
+              return `
+              <div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                <span>${u.username || 'Senza nome'} <span style="color:var(--text-muted); font-size:0.8rem;">(ID: ${u.id})</span></span>
+                ${statusHtml}
               </div>
-            `).join('');
+            `}).join('');
             
             adminOverlay.innerHTML = `
               <div style="background:#1a1a1a; padding:30px; border-radius:12px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; color:white; font-family:var(--font-main); border: 1px solid rgba(255,255,255,0.1); position:relative;">
