@@ -1057,92 +1057,65 @@ body {
   font-weight: 600;
 }
 
-/* Smartphone Scale 0.88 & iOS Bottom Tab Bar */
+/* === MOBILE: Hide top navbar, show bottom tab bar === */
+
+/* Tab bar default: hidden on desktop */
+.mobile-tab-bar {
+  display: none;
+}
+
+/* On mobile screens */
 @media (max-width: 768px) {
   html, body {
     zoom: 0.88;
-    padding-bottom: 90px; /* Spazio per la tab bar inferiore */
-  }
-  .hero-content {
-    padding-top: 6rem;
-  }
-  
-  /* Nascondi la navbar centrale sui dispositivi mobili (nav-links) */
-  .navbar .nav-links {
-    display: none;
-  }
-  
-  /* Riduci il padding della navbar in alto su mobile */
-  .navbar {
-    padding: 1rem 1.5rem;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0));
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+    padding-bottom: 80px;
   }
 
-  /* Bottom Tab Bar (iOS style) */
+  /* HIDE the entire top navbar on mobile */
+  .navbar {
+    display: none !important;
+  }
+
+  .hero-content {
+    padding-top: 4rem;
+  }
+
+  /* SHOW the bottom tab bar */
   .mobile-tab-bar {
     display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: rgba(15, 15, 15, 0.75);
+    background: rgba(15, 15, 15, 0.82);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     z-index: 9999;
     justify-content: space-around;
-    padding: 12px 10px 25px 10px; /* Più spazio sotto per la safe area iOS */
+    align-items: center;
+    padding: 10px 0 22px 0; /* extra bottom for iOS safe area */
   }
-  
+
   .mobile-tab-bar a {
-    color: var(--text-muted);
+    color: rgba(255,255,255,0.45);
     text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    font-size: 0.7rem;
+    gap: 3px;
+    font-size: 0.65rem;
     font-weight: 500;
-    transition: var(--transition);
+    transition: color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  
+
   .mobile-tab-bar a.active {
-    color: var(--text-color);
+    color: #ffffff;
   }
-  
+
   .mobile-tab-bar a i {
-    font-size: 1.4rem;
-  }
-  
-  /* Action Sheet iOS per il menu stagioni */
-  .season-selector .dropdown-menu {
-    position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    margin: 0;
-    border-radius: 20px 20px 0 0;
-    padding-bottom: 40px; /* Spazio extra per safe area iPhone */
-    background: rgba(30, 30, 30, 0.9);
-  }
-  .season-selector .dropdown-menu.show {
-    animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-  @keyframes slideUp {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
-  }
-  .dropdown-item {
-    text-align: center;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-size: 1.1rem;
-    padding: 1.2rem;
+    font-size: 1.5rem;
   }
 }
 
-.mobile-tab-bar {
-  display: none; /* Nascosta su desktop */
-}
