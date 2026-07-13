@@ -1191,13 +1191,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const searchedCatalog = await res.json();
       
-      // Filtro di sicurezza sul frontend: controlliamo ID esatto, o titolo esatto (rimuovendo punteggiatura e spazi per evitare mismatch scemi come "The O.C." vs "The O C")
-      availableLinks = searchedCatalog.filter(item => {
-        if (item.tmdb_id == id) return true;
-        const dbTitleClean = item.title.toLowerCase().replace(/[\W_]+/g, '');
-        const tmdbTitleClean = cleanTitle.toLowerCase().replace(/[\W_]+/g, '');
-        return dbTitleClean === tmdbTitleClean;
-      });
+      // Assicurati che sia un array (se il server restituisce un errore, sarà un oggetto)
+      if (!Array.isArray(searchedCatalog)) {
+        console.warn('search-catalog returned non-array:', searchedCatalog);
+      } else {
+        // Filtro di sicurezza sul frontend: controlliamo ID esatto, o titolo esatto
+        availableLinks = searchedCatalog.filter(item => {
+          if (item.tmdb_id == id) return true;
+          const dbTitleClean = item.title.toLowerCase().replace(/[\W_]+/g, '');
+          const tmdbTitleClean = cleanTitle.toLowerCase().replace(/[\W_]+/g, '');
+          return dbTitleClean === tmdbTitleClean;
+        });
+      }
     } catch(e) { console.error('Failed to load links from backend:', e); }
 
     // Background
@@ -1339,7 +1344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             
             // Trova se abbiamo il link nel nostro DB per questa stagione/episodio
-            const linkData = availableLinks.find(l => l.season === seasonNumber && l.episode === ep.episode_number);
+            const linkData = availableLinks.find(l => l.season === Number(seasonNumber) && l.episode === ep.episode_number);
             const imgWrapper = card.querySelector('.episode-img-wrapper');
             
             if (linkData) {

@@ -76,34 +76,9 @@ body {
   align-items: center;
   gap: 2rem;
 }
-.navbar .nav-links {
-  display: none !important;
-}
-
-.nav-links li {
-  height: 24px;
-  cursor: pointer;
-  font-family: var(--font-logo) !important;
-}
+/* nav-links rimossi dal HTML — regola di sicurezza */
 .nav-links {
-  display: flex;
-  gap: 2rem;
-  list-style: none;
-}
-.nav-links a {
-  color: var(--text-color);
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 1rem;
-  opacity: 0.7;
-  transition: opacity var(--transition);
-}
-.nav-links a:hover, .nav-links a.active {
-  opacity: 1;
-}
-.nav-links a.active {
-  border-bottom: 2px solid white;
-  padding-bottom: 5px;
+  display: none !important;
 }
 .icon-btn {
   background: none;
