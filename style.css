@@ -76,7 +76,11 @@ body {
   align-items: center;
   gap: 2rem;
 }
-.logo {
+.navbar .nav-links {
+  display: none !important;
+}
+
+.nav-links li {
   height: 24px;
   cursor: pointer;
   font-family: var(--font-logo) !important;
@@ -1069,11 +1073,6 @@ body {
   html, body {
     zoom: 0.88;
     padding-bottom: 80px;
-  }
-
-  /* HIDE the entire top navbar on mobile */
-  .navbar {
-    display: none !important;
   }
 
   .hero-content {
