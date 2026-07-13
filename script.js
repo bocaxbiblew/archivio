@@ -1701,22 +1701,23 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (diffDays === 1) badgeText = 'Domani';
         else badgeText = `Tra ${diffDays} giorni`;
 
-        const imgUrl = ep.poster_path ? `https://image.tmdb.org/t/p/w500${ep.poster_path}` : `https://placehold.co/400x225/1a1a1a/fff?text=Episodio`;
+        const imgUrl = ep.poster_path ? `https://image.tmdb.org/t/p/w200${ep.poster_path}` : `https://placehold.co/75x75/1a1a1a/fff?text=EP`;
+
+        // Format short date like "venerdì · 23:00" or "lug 20 · 2:00"
+        const dayName = dateObj.toLocaleDateString('it-IT', { weekday: 'long', timeZone: 'Europe/Rome' });
+        const shortDate = diffDays <= 6 ? dayName : dateObj.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', timeZone: 'Europe/Rome' });
 
         const card = document.createElement('a');
         card.className = 'calendar-card';
         card.href = `series.html?id=${ep.tmdb_id}`;
         card.innerHTML = `
-          <div class="cal-img-wrapper">
-            <img src="${imgUrl}" alt="${ep.series_title}">
-            <div class="cal-date-badge">${badgeText}</div>
-          </div>
+          <img class="cal-poster" src="${imgUrl}" alt="${ep.series_title}">
           <div class="cal-info">
             <div class="cal-series-title">${ep.series_title}</div>
             <div class="cal-ep-title">S${ep.season_number} E${ep.episode_number}: ${ep.episode_title}</div>
-            <div class="cal-ep-meta">${dateStr}</div>
-            <div class="cal-overview">${ep.overview || 'Nessuna trama disponibile.'}</div>
+            <div class="cal-ep-meta">${shortDate}</div>
           </div>
+          <i class='bx bxs-bell cal-bell'></i>
         `;
         grid.appendChild(card);
       });
