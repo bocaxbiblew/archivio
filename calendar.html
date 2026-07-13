@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calendario Uscite - Archivio Stream</title>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=6">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <style>
     .calendar-container {
@@ -86,12 +86,6 @@
   <nav class="navbar">
     <div class="nav-left">
       <h2 class="logo" style="margin:0; font-weight:900; letter-spacing:2px; font-size:1.5rem; color:white; cursor:pointer;" onclick="window.location.href='index.html'">ARCHIVIO</h2>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="catalog_series.html">Serie</a></li>
-        <li><a href="catalog_movies.html">Film</a></li>
-        <li><a href="calendar.html" class="active">Calendario</a></li>
-      </ul>
     </div>
     <div class="nav-right">
       <i class='bx bx-search' style="font-size: 1.5rem; cursor: pointer;"></i>
@@ -116,8 +110,10 @@
       <!-- Injected via JS -->
     </div>
   </div>
-  
-  <script src="script.js?v=3"></script>
+
+  <div id="toast" class="toast">Azione completata</div>
+
+  <script src="script.js?v=6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       initCalendar();

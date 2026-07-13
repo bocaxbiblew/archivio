@@ -36,6 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
         navbar.classList.remove('scrolled');
       }
     }
+    
+    const detailNav = document.querySelector('.detail-top-nav');
+    if (detailNav) {
+      if (window.scrollY > 50) {
+        detailNav.classList.add('scrolled');
+      } else {
+        detailNav.classList.remove('scrolled');
+      }
+    }
 
     // Task 3: Opacizzazione su scroll per le pagine di dettaglio (series.html, movie.html)
     const heroOverlay = document.getElementById('hero-fade-overlay');

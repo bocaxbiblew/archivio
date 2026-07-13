@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catalogo Film - HBO Max Clone</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Catalogo Film - Archivio Stream</title>
+  <link rel="stylesheet" href="style.css?v=6">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -14,12 +14,6 @@
   <nav class="navbar">
     <div class="nav-left">
       <h2 class="logo" style="margin:0; font-weight:900; letter-spacing:2px; font-size:1.5rem; color:white; cursor:pointer;" onclick="window.location.href='index.html'">ARCHIVIO</h2>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="catalog_series.html">Serie</a></li>
-        <li><a href="catalog_movies.html" class="active">Film</a></li>
-        <li><a href="calendar.html">Calendario</a></li>
-      </ul>
     </div>
     <div class="nav-right">
       <button class="icon-btn"><i class='bx bx-search'></i></button>
@@ -27,6 +21,14 @@
       <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar">
     </div>
   </nav>
+
+  <!-- Mobile Tab Bar (iOS style) -->
+  <div class="mobile-tab-bar">
+    <a href="index.html"><i class='bx bx-home'></i><span>Home</span></a>
+    <a href="catalog_series.html"><i class='bx bx-tv'></i><span>Serie</span></a>
+    <a href="catalog_movies.html" class="active"><i class='bx bxs-film'></i><span>Film</span></a>
+    <a href="calendar.html"><i class='bx bx-calendar'></i><span>Uscite</span></a>
+  </div>
 
   <header class="catalog-header">
     <h1 class="catalog-title">Film</h1>
@@ -36,6 +38,6 @@
     <!-- Locandine inserite via JS -->
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>
