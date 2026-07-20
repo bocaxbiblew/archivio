@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="style.css?v=7">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Archivio">
+  <link rel="apple-touch-icon" href="assets/logo.png">
 </head>
 <body>
 
@@ -17,10 +23,10 @@
 
   <!-- Mobile Tab Bar (iOS style) -->
   <div class="mobile-tab-bar">
-    <a href="index.html"><i class='bx bx-home'></i><span>Home</span></a>
-    <a href="catalog_series.html"><i class='bx bx-tv'></i><span>Serie</span></a>
-    <a href="catalog_movies.html"><i class='bx bx-film'></i><span>Film</span></a>
-    <a href="calendar.html"><i class='bx bx-calendar'></i><span>Uscite</span></a>
+    <a href="index.html"><img src="assets/icons/icons8-home-100.png" width="24" height="24" style="opacity: 0.6;"><span>Home</span></a>
+    <a href="catalog_series.html"><img src="assets/icons/icons8-tv-100.png" width="24" height="24" style="opacity: 0.6;"><span>Serie</span></a>
+    <a href="catalog_movies.html"><img src="assets/icons/icons8-movie-100.png" width="24" height="24" style="opacity: 0.6;"><span>Film</span></a>
+    <a href="calendar.html"><img src="assets/icons/icons8-calendar-100.png" width="24" height="24" style="opacity: 0.6;"><span>Uscite</span></a>
   </div>
 
   <!-- Hero Section specific to movies -->
@@ -63,5 +69,13 @@
 
 
   <script src="script.js?v=7"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js');
+      });
+    }
+  </script>
 </body>
 </html>

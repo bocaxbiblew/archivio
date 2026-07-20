@@ -1,0 +1,21 @@
+{
+  "name": "Archivio Streaming",
+  "short_name": "Archivio",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#03030f",
+  "theme_color": "#03030f",
+  "description": "Catalogo streaming privato",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1297,6 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only for Series: Fetch Episodes for Season 1
     if (type === 'tv') {
       async function renderEpisodes(seasonNumber) {
+        seasonNumber = Number(seasonNumber);
         const episodesData = await getEpisodes(id, seasonNumber);
         const epContainer = document.getElementById('episodes-container');
         if (!epContainer) return;
@@ -1461,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API_BASE}/episodes/watched/get`, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, tmdb_id: id })
+              body: JSON.stringify({ user_id: currentUser.id, tmdb_id: id })
             });
             const d = await res.json();
             if (d.success) {
@@ -1492,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${API_BASE}/episodes/watched/toggle`, {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, tmdb_id: id, season_number: 0, episode_number: 0 })
+              body: JSON.stringify({ user_id: currentUser.id, tmdb_id: id, season_number: 0, episode_number: 0 })
             });
             const data = await res.json();
             if (data.success) {
@@ -1731,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="cal-ep-title">S${ep.season_number} E${ep.episode_number}: ${ep.episode_title}</div>
             <div class="cal-ep-meta">${shortDate}</div>
           </div>
-          <i class='bx bxs-bell cal-bell'></i>
+          <div class="cal-badge" style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; white-space: nowrap;">${badgeText}</div>
         `;
         grid.appendChild(card);
       });
@@ -1778,8 +1779,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <button id="save-profile-btn" style="width:100%; padding:5px; margin-top:5px; background:white; color:black; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Salva Profilo</button>
       </div>
       <div id="user-stats-container" style="padding: 10px; border-bottom: 1px solid #333; margin-bottom: 5px; font-size: 0.85rem; color: #ccc;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><i class='bx bx-tv'></i> Serie in DB:</span> <span id="stat-series" style="color:white; font-weight:bold;">...</span></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><i class='bx bx-camera-movie'></i> Film in DB:</span> <span id="stat-movies" style="color:white; font-weight:bold;">...</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><i class='bx bx-tv'></i> Serie:</span> <span id="stat-series" style="color:white; font-weight:bold;">...</span></div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><i class='bx bx-film'></i> Film:</span> <span id="stat-movies" style="color:white; font-weight:bold;">...</span></div>
         <div style="display:flex; justify-content:space-between;"><span><i class='bx bx-list-plus'></i> La mia lista:</span> <span id="stat-list" style="color:white; font-weight:bold;">...</span></div>
       </div>
       ${currentUser.telegram_id === '919091829' || currentUser.telegram_id === 919091829 ? `
