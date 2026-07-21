@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const airDate = new Date(data.last_episode_to_air.air_date);
       const diffTime = Date.now() - airDate.getTime();
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
-      if (diffDays >= 0 && diffDays <= 7) {
+      if (diffDays >= -2 && diffDays <= 14) {
         data.badge = "Nuovo Episodio";
       }
     }
@@ -2222,4 +2222,56 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.style.display = 'flex';
   }
 
+});
+
+// Custom Pull to Refresh Logic
+let startY = 0;
+let isPulling = false;
+const pTrContainer = document.createElement('div');
+pTrContainer.id = 'pull-to-refresh';
+pTrContainer.innerHTML = '<i class="bx bx-loader-alt bx-spin" style="font-size:2rem; color:var(--primary-color);"></i>';
+Object.assign(pTrContainer.style, {
+  position: 'fixed', top: '-60px', left: '0', width: '100%', height: '60px',
+  display: 'flex', justifyContent: 'center', alignItems: 'center',
+  zIndex: '9999', transition: 'top 0.2s', background: 'rgba(0,0,0,0.5)',
+  backdropFilter: 'blur(5px)'
+});
+document.addEventListener('DOMContentLoaded', () => {
+  // Only add if on mobile
+  if (window.innerWidth <= 768) {
+    document.body.appendChild(pTrContainer);
+    
+    document.body.addEventListener('touchstart', (e) => {
+      if (window.scrollY <= 0) {
+        startY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    }, {passive: true});
+
+    document.body.addEventListener('touchmove', (e) => {
+      if (!isPulling) return;
+      const currentY = e.touches[0].clientY;
+      if (currentY > startY && window.scrollY <= 0) {
+        const pullDist = currentY - startY;
+        if (pullDist > 60) {
+          pTrContainer.style.top = '0px';
+        }
+      } else {
+        isPulling = false;
+      }
+    }, {passive: true});
+
+    document.body.addEventListener('touchend', (e) => {
+      if (isPulling) {
+        const endY = e.changedTouches[0].clientY;
+        if (endY - startY > 80 && window.scrollY <= 0) {
+          pTrContainer.innerHTML = '<i class="bx bx-loader-alt bx-spin" style="font-size:2rem; color:var(--primary-color);"></i><span style="margin-left:10px; color:white;">Aggiornamento...</span>';
+          setTimeout(() => location.reload(), 500);
+        } else {
+          pTrContainer.style.top = '-60px';
+        }
+      }
+      isPulling = false;
+    });
+  }
 });
