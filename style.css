@@ -653,7 +653,7 @@ body {
     min-height: 70vh;
   }
   .navbar {
-    background: var(--nav-bg); /* ensure solid bg on mobile */
+    /* removed background override to keep it transparent */
   }
   .hero-title-img {
     max-width: 250px;
@@ -1012,8 +1012,7 @@ body {
 .toast-notification {
   position: fixed;
   top: 40px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100px);
+  right: -300px;
   background: rgba(15, 15, 15, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1022,14 +1021,14 @@ body {
   border-radius: 12px;
   font-weight: 500;
   font-size: 1.05rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  box-shadow: -4px 10px 40px rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.15);
   z-index: 10000;
   opacity: 0;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .toast-notification.show {
-  transform: translateX(-50%) translateY(0);
+  right: 20px;
   opacity: 1;
 }
 
@@ -1108,7 +1107,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     font-weight: 500;
     transition: color 0.2s ease;
     -webkit-tap-highlight-color: transparent;
