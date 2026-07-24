@@ -21,7 +21,7 @@
   <div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
     <p style="color: #aaa; margin-bottom: 2rem;">Gestione degli utenti collegati alla piattaforma.</p>
     <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 10px;">
-      <p style="color: #fff;">Caricamento utenti...</p>
+      <p style="color: #fff;"><i class='bx bx-loader-alt bx-spin'></i> Caricamento utenti...</p>
     </div>
   </div>
 
@@ -35,71 +35,98 @@
         return;
       }
       
+      const parsed = JSON.parse(userAuth);
+      
       try {
-        const res = await fetch(`${API_BASE}/admin/users`, {
+        const res = await fetch(API_BASE + '/admin/users', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: userAuth
+          body: JSON.stringify({
+            user_id: parsed.telegram_id || parsed.id,
+            otp_code: parsed.otp_code
+          })
         });
         const data = await res.json();
         
         const container = document.getElementById('admin-users-list');
         container.innerHTML = '';
         
-        if (data.success && data.users) {
-          if (data.users.length === 0) {
-             container.innerHTML = '<p style="color:#aaa;">Nessun utente trovato.</p>';
-             return;
-          }
-          data.users.forEach(u => {
-            const shortId = u.telegram_id || u.id.substring(0, 8) + '...';
-            const userCard = document.createElement('div');
-            userCard.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);';
-            userCard.innerHTML = `
-              <div>
-                <p style="margin:0; font-size:1.1rem; font-weight:bold; color:white;">${u.username || 'Sconosciuto'}</p>
-                <p style="margin:0; font-size:0.85rem; color:#aaa;">ID: ${shortId}</p>
-              </div>
-              ${(u.telegram_id !== '919091829' && u.telegram_id !== 919091829) 
-                ? \`<button class="admin-logout-btn" data-id="${u.id}" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:5px; font-weight: bold;"><i class='bx bx-exit'></i> Scollega</button>\`
-                : \`<span style="color:#f5c518; font-weight:bold; font-size:0.9rem;"><i class='bx bx-crown'></i> Superadmin</span>\`
-              }
-            `;
-            
-            const btn = userCard.querySelector('.admin-logout-btn');
-            if(btn) {
-              btn.addEventListener('click', async () => {
-                if(!confirm(\`Vuoi davvero scollegare l'utente ${u.username || shortId}?\`)) return;
-                
-                try {
-                  btn.innerText = 'Attendere...';
-                  const logoutRes = await fetch(`${API_BASE}/admin/users/logout`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ admin_id: JSON.parse(userAuth).id, target_user_id: u.id })
-                  });
-                  const logoutData = await logoutRes.json();
-                  if (logoutData.success) {
-                    userCard.remove();
-                  } else {
-                    alert('Errore: ' + logoutData.error);
-                    btn.innerText = 'Scollega';
-                  }
-                } catch(e) {
-                  alert('Errore di rete');
-                  btn.innerText = 'Scollega';
-                }
-              });
-            }
-            
-            container.appendChild(userCard);
-          });
-        } else {
-          container.innerHTML = '<p style="color:#ff4444;">Non sei autorizzato o si è verificato un errore.</p>';
+        // The API might return data.users or data.all
+        const usersList = data.users || data.all || [];
+        
+        if (!data.success) {
+          container.innerHTML = '<p style="color:#ff4444;">Non sei autorizzato: ' + (data.error || 'errore sconosciuto') + '</p>';
+          return;
         }
+        
+        if (usersList.length === 0) {
+          container.innerHTML = '<p style="color:#aaa;">Nessun utente trovato.</p>';
+          return;
+        }
+        
+        usersList.forEach(function(u) {
+          var shortId = String(u.telegram_id || u.id || '').substring(0, 10);
+          var userCard = document.createElement('div');
+          userCard.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);';
+          
+          var isSuperadmin = (String(u.telegram_id) === '919091829');
+          var actionHtml = '';
+          if (isSuperadmin) {
+            actionHtml = '<span style="color:#f5c518; font-weight:bold; font-size:0.9rem;"><i class="bx bx-crown"></i> Superadmin</span>';
+          } else if (u.otp_code) {
+            actionHtml = '<button class="admin-logout-btn" data-id="' + u.id + '" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:5px; font-weight: bold;"><i class="bx bx-exit"></i> Scollega</button>';
+          } else {
+            actionHtml = '<span style="color:#e65100; font-size:0.8rem; font-weight:bold; background:rgba(230,81,0,0.1); padding:4px 8px; border-radius:4px;"><i class="bx bx-error-circle"></i> Disconnesso</span>';
+          }
+          
+          userCard.innerHTML = '<div>' +
+            '<p style="margin:0; font-size:1.1rem; font-weight:bold; color:white;">' + (u.username || 'Sconosciuto') + '</p>' +
+            '<p style="margin:0; font-size:0.85rem; color:#aaa;">ID: ' + shortId + '</p>' +
+            '</div>' + actionHtml;
+          
+          var btn = userCard.querySelector('.admin-logout-btn');
+          if (btn) {
+            btn.addEventListener('click', function() {
+              if (!confirm('Vuoi davvero scollegare ' + (u.username || 'questo utente') + '?')) return;
+              
+              btn.innerText = 'Attendere...';
+              btn.disabled = true;
+              
+              fetch(API_BASE + '/admin/users/logout', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  user_id: parsed.telegram_id || parsed.id,
+                  otp_code: parsed.otp_code,
+                  target_user_id: u.id
+                })
+              })
+              .then(function(r) { return r.json(); })
+              .then(function(d) {
+                if (d.success) {
+                  userCard.style.opacity = '0';
+                  userCard.style.transition = 'opacity 0.3s';
+                  setTimeout(function() { userCard.remove(); }, 300);
+                } else {
+                  alert('Errore: ' + (d.error || 'sconosciuto'));
+                  btn.innerText = 'Scollega';
+                  btn.disabled = false;
+                }
+              })
+              .catch(function() {
+                alert('Errore di rete');
+                btn.innerText = 'Scollega';
+                btn.disabled = false;
+              });
+            });
+          }
+          
+          container.appendChild(userCard);
+        });
+        
       } catch (err) {
-        console.error(err);
-        document.getElementById('admin-users-list').innerHTML = '<p style="color:#ff4444;">Errore di connessione.</p>';
+        console.error('Admin load error:', err);
+        document.getElementById('admin-users-list').innerHTML = '<p style="color:#ff4444;">Errore di connessione al server.</p>';
       }
     }
     

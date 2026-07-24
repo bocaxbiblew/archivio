@@ -2241,47 +2241,22 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.style.display = 'flex';
   }
 
-});
-
-// Custom Pull to Refresh Logic
-let startY = 0;
-let isPulling = false;
-const pTrContainer = document.createElement('div');
-pTrContainer.id = 'pull-to-refresh';
-pTrContainer.innerHTML = '<i class="bx bx-loader-alt bx-spin" style="font-size:2rem; color:var(--primary-color);"></i>';
-Object.assign(pTrContainer.style, {
-  position: 'fixed', top: '-60px', left: '0', width: '100%', height: '60px',
-  display: 'flex', justifyContent: 'center', alignItems: 'center',
-  zIndex: '9999', transition: 'top 0.2s', background: 'rgba(0,0,0,0.5)',
-  backdropFilter: 'blur(5px)'
-});
-document.addEventListener('DOMContentLoaded', () => {
-
-  // Theme Toggle Logic
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) {
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    if (currentTheme === 'light') {
-      document.body.classList.add('light-mode');
-      themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
-    }
-
-    themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('light-mode');
-      if (document.body.classList.contains('light-mode')) {
-        localStorage.setItem('theme', 'light');
-        themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
-      } else {
-        localStorage.setItem('theme', 'dark');
-        themeToggle.innerHTML = "<i class='bx bx-sun'></i>";
-      }
-    });
-  }
-
-  // Only add if on mobile
+  // --- Pull to Refresh (mobile only) ---
   if (window.innerWidth <= 768) {
+    const pTrContainer = document.createElement('div');
+    pTrContainer.id = 'pull-to-refresh';
+    pTrContainer.innerHTML = '<i class="bx bx-loader-alt bx-spin" style="font-size:2rem; color:var(--primary-color);"></i>';
+    Object.assign(pTrContainer.style, {
+      position: 'fixed', top: '-60px', left: '0', width: '100%', height: '60px',
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      zIndex: '9999', transition: 'top 0.2s', background: 'rgba(0,0,0,0.5)',
+      backdropFilter: 'blur(5px)'
+    });
     document.body.appendChild(pTrContainer);
-    
+
+    let startY = 0;
+    let isPulling = false;
+
     document.body.addEventListener('touchstart', (e) => {
       if (window.scrollY <= 0) {
         startY = e.touches[0].clientY;
@@ -2293,8 +2268,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isPulling) return;
       const currentY = e.touches[0].clientY;
       if (currentY > startY && window.scrollY <= 0) {
-        const pullDist = currentY - startY;
-        if (pullDist > 60) {
+        if (currentY - startY > 60) {
           pTrContainer.style.top = '0px';
         }
       } else {
@@ -2315,4 +2289,5 @@ document.addEventListener('DOMContentLoaded', () => {
       isPulling = false;
     });
   }
+
 });
