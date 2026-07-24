@@ -22,10 +22,13 @@ body.light-mode {
   --bg-color: #f0f2f5;
   --text-color: #111111;
   --text-muted: #555555;
-  --card-bg: #ffffff;
-  --header-bg: rgba(240, 242, 245, 0.9);
-  --header-glass: rgba(240, 242, 245, 0.85);
-  --glass-border: rgba(0, 0, 0, 0.1);
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --btn-bg: #111111;
+  --btn-text: #ffffff;
+  --primary-accent: #000000;
+  --btn-secondary-bg: rgba(0, 0, 0, 0.1);
+  --btn-secondary-hover: rgba(0, 0, 0, 0.2);
+  --bg-gradient: linear-gradient(180deg, rgba(240,242,245,0) 0%, #f0f2f5 100%);
 }
 
 body.light-mode .mobile-tab-bar a img {
@@ -61,6 +64,107 @@ body.light-mode #search-input::placeholder {
 }
 body.light-mode .search-icon {
   color: rgba(0, 0, 0, 0.4);
+}
+
+body.light-mode .navbar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(15px);
+}
+body.light-mode .navbar.scrolled {
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+body.light-mode .nav-links a {
+  color: #333;
+}
+body.light-mode .nav-links a.active {
+  color: #000;
+}
+body.light-mode .nav-links a:hover {
+  color: #000;
+}
+body.light-mode .icon-btn {
+  color: #333;
+}
+body.light-mode .section-title {
+  color: #111;
+}
+body.light-mode .card {
+  background: rgba(0, 0, 0, 0.03);
+}
+body.light-mode .hero-content h1,
+body.light-mode .hero-content p {
+  color: #111;
+}
+body.light-mode .catalog-title {
+  color: #111;
+}
+body.light-mode .catalog-header select {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #111 !important;
+}
+body.light-mode .poster-overlay {
+  background: linear-gradient(transparent 0%, rgba(255,255,255,0.95) 100%);
+}
+body.light-mode .poster-title {
+  color: #111;
+}
+body.light-mode .poster-meta {
+  color: #555;
+}
+body.light-mode .mobile-tab-bar {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-top: 1px solid rgba(0,0,0,0.1) !important;
+}
+body.light-mode .mobile-tab-bar a {
+  color: #888;
+}
+body.light-mode .mobile-tab-bar a.active {
+  color: #000 !important;
+  background: rgba(0, 0, 0, 0.08);
+}
+body.light-mode .mobile-tab-bar a img {
+  filter: invert(0) !important;
+}
+body.light-mode .mobile-tab-bar a.active img {
+  filter: invert(0) !important;
+  opacity: 1 !important;
+}
+body.light-mode .search-overlay {
+  background: rgba(240, 242, 245, 0.98);
+}
+body.light-mode .close-search {
+  color: #111;
+}
+body.light-mode .toast {
+  background: rgba(0,0,0,0.85);
+  color: white;
+}
+body.light-mode #user-dropdown-menu {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  color: #111;
+}
+body.light-mode #user-dropdown-menu div,
+body.light-mode #user-dropdown-menu label,
+body.light-mode #user-dropdown-menu p,
+body.light-mode #user-dropdown-menu input {
+  color: #111 !important;
+}
+body.light-mode #user-dropdown-menu #logout-btn {
+  color: #ff4444 !important;
+}
+body.light-mode .calendar-container {
+  color: #111;
+}
+body.light-mode .calendar-card {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+  color: #111 !important;
+}
+body.light-mode .calendar-title {
+  color: #111;
 }
 
 

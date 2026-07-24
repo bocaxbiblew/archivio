@@ -512,6 +512,81 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { console.error(e); return false; }
   }
 
+  // --- CATALOG SORT HANDLER ---
+  const catalogSortSelect = document.getElementById('catalog-sort');
+  if (catalogSortSelect) {
+    catalogSortSelect.addEventListener('change', async () => {
+      const val = catalogSortSelect.value;
+      const isSeries = !!document.getElementById('catalog-grid-series');
+      const type = isSeries ? 'tv' : 'movie';
+      const containerId = isSeries ? 'catalog-grid-series' : 'catalog-grid-movies';
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      
+      container.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#aaa; padding:2rem;"><i class="bx bx-loader-alt bx-spin" style="font-size:2rem;"></i><br>Ordinamento in corso...</p>';
+      
+      try {
+        const fileRes = await fetch(`${API_BASE}/catalog/titles`);
+        const allTitles = await fileRes.json();
+        const uniqueTmdbIds = allTitles.filter(c => c.type === type && c.tmdb_id).map(c => c.tmdb_id);
+        
+        // Fetch ALL details in parallel (batched)
+        const BATCH = 10;
+        let allItems = [];
+        for (let i = 0; i < uniqueTmdbIds.length; i += BATCH) {
+          const batch = uniqueTmdbIds.slice(i, i + BATCH);
+          const results = await Promise.allSettled(batch.map(id => getDetails(id, type)));
+          results.forEach(r => { if (r.status === 'fulfilled' && r.value) allItems.push(r.value); });
+        }
+        
+        // Sort based on selection
+        if (val === 'popolarita') {
+          allItems.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+        } else if (val === 'voti') {
+          allItems.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+        } else if (val === 'anno') {
+          allItems.sort((a, b) => {
+            const dA = new Date(a.release_date || a.first_air_date || '1970-01-01').getTime();
+            const dB = new Date(b.release_date || b.first_air_date || '1970-01-01').getTime();
+            return dB - dA;
+          });
+        } else if (val === 'az') {
+          allItems.sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || ''));
+        } else if (val === 'recenti') {
+          // Keep original order (order added to catalog)
+        }
+        
+        // Render sorted items
+        container.innerHTML = '';
+        allItems.forEach(data => {
+          const link = type === 'tv' ? `series.html?id=${data.id}` : `movie.html?id=${data.id}`;
+          const imgUrl = data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=No+Poster`;
+          const titleText = data.name || data.title;
+          const releaseYear = (data.release_date || data.first_air_date || '').substring(0, 4);
+          const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+          
+          const card = document.createElement('a');
+          card.href = link;
+          card.className = 'card card-poster catalog-poster';
+          card.innerHTML = `
+            <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+            <div class="poster-overlay">
+              <div class="poster-title">${titleText}</div>
+              <div class="poster-meta">
+                <span>${releaseYear}</span>
+                <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        console.error('Sort error:', e);
+        container.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:red;">Errore nell\'ordinamento</p>';
+      }
+    });
+  }
+
   // --- ROUTING LOGIC (MOLTO PIU ROBUSTA PER NEOCITIES) ---
   if (document.getElementById('catalog-grid-series')) {
     initCatalog('tv', 'catalog-grid-series');
@@ -1922,119 +1997,6 @@ document.addEventListener('DOMContentLoaded', () => {
       adminBtn.addEventListener('click', () => {
         window.location.href = 'admin_users.html';
       });
-      // Skip the old modal logic
-      /*
-        adminBtn.innerText = 'Caricamento...';
-        try {
-          const res = await fetch(`${API_BASE}/admin/users`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code })
-          });
-          const data = await res.json();
-          adminBtn.innerHTML = "<i class='bx bx-crown'></i> Gestione Admin (Utenti)";
-          
-          if (data.success) {
-            // Mostra modale admin
-            let adminOverlay = document.getElementById('admin-modal');
-            if (!adminOverlay) {
-              adminOverlay = document.createElement('div');
-              adminOverlay.id = 'admin-modal';
-              adminOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; justify-content:center; align-items:center;';
-              document.body.appendChild(adminOverlay);
-            }
-            
-            let activeHtml = data.active.map(u => `<div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;"><span>${u.username || 'Senza nome'} (ID: ${u.id})</span> <span style="color:#4CAF50;">● Online</span></div>`).join('');
-            
-            let statsHtml = `
-              <div style="display:flex; justify-content:space-around; background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:20px;">
-                <div style="text-align:center;">
-                  <div style="font-size:2rem; font-weight:800; color:#fff;">${data.users_24h || 0}</div>
-                  <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Utenti (24h)</div>
-                </div>
-                <div style="text-align:center;">
-                  <div style="font-size:2rem; font-weight:800; color:#e50914;">${data.vlc_requests_24h || 0}</div>
-                  <div style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Link VLC (24h)</div>
-                </div>
-              </div>
-            `;
-
-            let allHtml = data.all.map(u => {
-              const statusHtml = u.otp_code 
-                ? `<button class="admin-logout-btn" data-id="${u.id}" style="background:#d32f2f; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class='bx bx-exit'></i> Scollega</button>`
-                : `<span style="color:#e65100; font-size:0.8rem; font-weight:bold; background:rgba(230,81,0,0.1); padding:4px 8px; border-radius:4px;"><i class='bx bx-error-circle'></i> Disconnesso</span>`;
-              return `
-              <div style="padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                <span>${u.username || 'Senza nome'} <span style="color:var(--text-muted); font-size:0.8rem;">(ID: ${u.id})</span></span>
-                ${statusHtml}
-              </div>
-            `}).join('');
-            
-            adminOverlay.innerHTML = `
-              <div style="background:#1a1a1a; padding:30px; border-radius:12px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; color:white; font-family:var(--font-main); border: 1px solid rgba(255,255,255,0.1); position:relative;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:20px;">
-                  <h2 style="margin:0; font-size:1.5rem;"><i class='bx bx-crown' style="color:#f5c518;"></i> Pannello Admin</h2>
-                  <button onclick="document.getElementById('admin-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;"><i class='bx bx-x'></i></button>
-                </div>
-                
-                ${statsHtml}
-
-                <h3 style="margin-bottom:15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i class='bx bxs-user-detail'></i> Utenti Attivi Ora (${data.active.length})</h3>
-                <div style="background:rgba(0,0,0,0.3); border-radius:8px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.05);">
-                  ${activeHtml || '<div style="padding:15px; color:#888; text-align:center;">Nessun utente attivo al momento.</div>'}
-                </div>
-                
-                <h3 style="margin-bottom:15px; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i class='bx bxs-group'></i> Tutti gli Utenti (${data.total})</h3>
-                <div style="background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
-                  ${allHtml || '<div style="padding:15px; color:#aaa; text-align:center;">Nessun utente registrato.</div>'}
-                </div>
-              </div>
-            `;
-            adminOverlay.style.display = 'flex';
-            dropdown.style.display = 'none'; // chiudi dropdown
-            
-            // Event delegation per i tasti di logout
-            adminOverlay.onclick = async function(e) {
-              const btn = e.target.closest('.admin-logout-btn');
-              if (btn) {
-                const targetId = btn.getAttribute('data-id');
-                if(!confirm('Sei sicuro di voler forzare il logout di questo utente? Dovrà reinserire il codice.')) return;
-                
-                // Disabilita tasto durante chiamata
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-                
-                try {
-                  const res = await fetch(`${API_BASE}/admin/users/logout`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, otp_code: currentUser.otp_code, target_user_id: targetId })
-                  });
-                  const d = await res.json();
-                  if (d.success) {
-                    alert('Utente disconnesso con successo!');
-                    adminOverlay.style.display = 'none';
-                    adminBtn.click(); // Ricarica modale
-                  } else {
-                    alert('Errore: ' + d.error);
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                  }
-                } catch(err) {
-                  alert('Errore di rete');
-                  btn.disabled = false;
-                  btn.style.opacity = '1';
-                }
-              }
-            };
-          } else {
-            alert("Errore Admin: " + data.error);
-          }
-        } catch(e) {
-          console.error(e);
-          adminBtn.innerHTML = "<i class='bx bx-crown'></i> Gestione Admin (Utenti)";
-        }
-      });*/
     }
 
     document.getElementById('logout-btn').addEventListener('click', () => {
