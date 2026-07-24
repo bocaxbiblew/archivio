@@ -1081,11 +1081,23 @@ document.addEventListener('DOMContentLoaded', () => {
       items.forEach(data => {
         const link = type === 'tv' ? `series.html?id=${data.id}` : `movie.html?id=${data.id}`;
         const imgUrl = data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=No+Poster`;
+        const titleText = data.name || data.title;
+        const releaseYear = (data.release_date || data.first_air_date || '').substring(0,4);
+        const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
         
         const card = document.createElement('a');
         card.href = link;
-        card.className = 'card card-poster';
-        card.innerHTML = `<img src="${imgUrl}" alt="${data.name || data.title}" loading="lazy">`;
+        card.className = 'card card-poster catalog-poster';
+        card.innerHTML = `
+          <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+          <div class="poster-overlay">
+            <div class="poster-title">${titleText}</div>
+            <div class="poster-meta">
+              <span>${releaseYear}</span>
+              <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
+            </div>
+          </div>
+        `;
         container.appendChild(card);
       });
     };
@@ -1133,11 +1145,23 @@ document.addEventListener('DOMContentLoaded', () => {
         validItems.forEach(data => {
           const link = type === 'tv' ? `series.html?id=${data.id}` : `movie.html?id=${data.id}`;
           const imgUrl = data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=No+Poster`;
+          const titleText = data.name || data.title;
+          const releaseYear = (data.release_date || data.first_air_date || '').substring(0,4);
+          const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
           
           const card = document.createElement('a');
           card.href = link;
-          card.className = 'card card-poster';
-          card.innerHTML = `<img src="${imgUrl}" alt="${data.name || data.title}" loading="lazy">`;
+          card.className = 'card card-poster catalog-poster';
+          card.innerHTML = `
+            <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+            <div class="poster-overlay">
+              <div class="poster-title">${titleText}</div>
+              <div class="poster-meta">
+                <span>${releaseYear}</span>
+                <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
+              </div>
+            </div>
+          `;
           container.appendChild(card);
         });
         

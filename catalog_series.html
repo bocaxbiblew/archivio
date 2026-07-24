@@ -37,13 +37,24 @@
   <!-- Mobile Tab Bar (iOS style) -->
   <div class="mobile-tab-bar">
     <a href="index.html"><img src="assets/icons/icons8-home-100.png" width="28" height="28" style="opacity: 0.6;"><span>Home</span></a>
-    <a href="catalog_series.html"><img src="assets/icons/icons8-tv-100.png" width="28" height="28"><span>Serie</span></a>
+    <a href="catalog_series.html" class="active"><img src="assets/icons/icons8-tv-100.png" width="28" height="28"><span>Serie</span></a>
     <a href="catalog_movies.html"><img src="assets/icons/icons8-movie-100.png" width="28" height="28" style="opacity: 0.6;"><span>Film</span></a>
     <a href="calendar.html"><img src="assets/icons/icons8-calendar-100.png" width="28" height="28" style="opacity: 0.6;"><span>Uscite</span></a>
   </div>
 
-  <header class="catalog-header">
-    <h1 class="catalog-title">Serie TV</h1>
+  <header class="catalog-header" style="flex-direction: column; align-items: flex-start;">
+    <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
+      <div>
+        <h1 class="catalog-title" style="margin-bottom: 5px;">All Series</h1>
+        <p style="color: #aaa; font-size: 0.9rem; margin-top: 5px;">A broad wall of TV shows worth browsing.</p>
+      </div>
+      <i class='bx bx-grid-alt' style="font-size: 1.5rem; color: #fff;"></i>
+    </div>
+    <div style="margin: 20px 0; display: flex; justify-content: center; width: 100%;">
+      <button style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer;">
+        All Series <i class='bx bx-chevron-down'></i>
+      </button>
+    </div>
   </header>
 
   <main class="catalog-grid" id="catalog-grid-series">

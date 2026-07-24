@@ -817,9 +817,9 @@ body {
     margin-top: 80px;
   }
   .catalog-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     padding: 1rem;
-    gap: 1rem;
+    gap: 0.8rem;
   }
 }
 
@@ -1090,7 +1090,9 @@ body {
     display: flex !important;
     position: fixed;
     bottom: calc(env(safe-area-inset-bottom, 0) + 15px);
-    left: 5%;
+    left: 50%;
+    transform: translateX(-50%) translateZ(0);
+    max-width: 330px;
     width: 90%;
     background: rgba(30, 30, 30, 0.65);
     backdrop-filter: blur(25px);
@@ -1098,11 +1100,10 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 40px;
     z-index: 9999;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
-    padding: 6px 10px;
+    padding: 8px 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    transform: translateZ(0);
   }
 
   .mobile-tab-bar a {
@@ -1140,3 +1141,50 @@ body {
   }
 }
 
+
+/* CATALOG POSTER OVERLAYS */
+.catalog-poster {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  display: block;
+}
+.catalog-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.catalog-poster:hover img {
+  transform: scale(1.05);
+}
+.poster-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem 0.5rem 0.5rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+.poster-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.poster-meta {
+  color: #aaa;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
