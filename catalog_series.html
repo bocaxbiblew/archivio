@@ -36,24 +36,27 @@
 
   <!-- Mobile Tab Bar (iOS style) -->
   <div class="mobile-tab-bar">
-    <a href="index.html"><img src="assets/icons/icons8-home-100.png" width="28" height="28" style="opacity: 0.6;"><span>Home</span></a>
-    <a href="catalog_series.html" class="active"><img src="assets/icons/icons8-tv-100.png" width="28" height="28"><span>Serie</span></a>
-    <a href="catalog_movies.html"><img src="assets/icons/icons8-movie-100.png" width="28" height="28" style="opacity: 0.6;"><span>Film</span></a>
-    <a href="calendar.html"><img src="assets/icons/icons8-calendar-100.png" width="28" height="28" style="opacity: 0.6;"><span>Uscite</span></a>
+    <a href="index.html"><img src="assets/icons/icons8-home-100.png" width="34" height="34" style="opacity: 0.6;"><span>Home</span></a>
+    <a href="catalog_series.html" class="active"><img src="assets/icons/icons8-tv-100.png" width="34" height="34"><span>Serie</span></a>
+    <a href="catalog_movies.html"><img src="assets/icons/icons8-movie-100.png" width="34" height="34" style="opacity: 0.6;"><span>Film</span></a>
+    <a href="calendar.html"><img src="assets/icons/icons8-calendar-100.png" width="34" height="34" style="opacity: 0.6;"><span>Uscite</span></a>
   </div>
 
-  <header class="catalog-header" style="flex-direction: column; align-items: flex-start;">
+    <header class="catalog-header" style="flex-direction: column; align-items: flex-start;">
     <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
       <div>
-        <h1 class="catalog-title" style="margin-bottom: 5px;">All Series</h1>
-        <p style="color: #aaa; font-size: 0.9rem; margin-top: 5px;">A broad wall of TV shows worth browsing.</p>
+        <h1 class="catalog-title" style="margin-bottom: 5px;">Tutte le Serie</h1>
       </div>
-      <i class='bx bx-grid-alt' style="font-size: 1.5rem; color: #fff;"></i>
     </div>
     <div style="margin: 20px 0; display: flex; justify-content: center; width: 100%;">
-      <button style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 10px 20px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer;">
-        All Series <i class='bx bx-chevron-down'></i>
-      </button>
+      <div style="position: relative; display: inline-block;">
+        <select id="catalog-sort" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 40px 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 1rem; backdrop-filter: blur(10px); outline: none;">
+          <option value="popolarita" style="background: #111; color: white;">Popolarità</option>
+          <option value="voti" style="background: #111; color: white;">Più votati</option>
+          <option value="recenti" style="background: #111; color: white;">Aggiunte di recente</option>
+        </select>
+        <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: white;"></i>
+      </div>
     </div>
   </header>
 

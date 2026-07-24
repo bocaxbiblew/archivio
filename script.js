@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.innerHTML = `
       <div class="search-container" style="max-width: 700px;">
         <button class="close-search" id="close-bookmark"><i class='bx bx-x'></i></button>
-        <h2 style="color:#fff; margin-bottom: 1rem; font-size: 1.5rem;">La mia lista</h2>
+        <h2 style="color:#fff; margin-bottom: 1rem; font-size: 1.5rem; display:flex; align-items:center; gap: 8px;">La mia lista <i class='bx bxs-heart' style="color:#ff4444;"></i></h2>
         <div id="bookmark-results" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-height: 70vh; overflow-y: auto; padding: 0.5rem 0;"></div>
       </div>
     `;
@@ -1796,18 +1796,20 @@ document.addEventListener('DOMContentLoaded', () => {
       box-shadow: 0 4px 10px rgba(0,0,0,0.8);
     `;
     dropdown.innerHTML = `
-      <div style="padding: 10px; border-bottom: 1px solid #333; margin-bottom: 5px;">
-        <p style="margin:0; font-weight:bold; color:white;">ID Telegram</p>
-        <p style="margin:0; font-size:0.8rem; color:#aaa;">${currentUser.telegram_id || 'Sconosciuto'}</p>
+      <div style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; display:flex; align-items:center; gap: 10px;">
+        <div style="width: 35px; height: 35px; border-radius: 50%; background: #ffcc00; display:flex; justify-content:center; align-items:center; font-weight:bold; color:black;">
+          ${(currentUser.username || 'U')[0].toUpperCase()}
+        </div>
+        <div style="flex-grow:1;">
+          <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
+          <p style="margin:0; font-size:0.7rem; color:#aaa;">ID: ${currentUser.telegram_id || 'Sconosciuto'}</p>
+        </div>
+        <button id="save-profile-btn" style="background:transparent; color:#ffcc00; border:none; cursor:pointer; padding:5px;"><i class='bx bx-check' style="font-size:1.5rem;"></i></button>
       </div>
-      <div style="padding: 10px; border-bottom: 1px solid #333; margin-bottom: 5px;">
-        <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:8px; background:#2a2a2a; color:white; border:none; border-radius:4px;">
-        <button id="save-profile-btn" style="width:100%; padding:5px; margin-top:5px; background:white; color:black; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Salva Profilo</button>
-      </div>
-      <div id="user-stats-container" style="padding: 10px; border-bottom: 1px solid #333; margin-bottom: 5px; font-size: 0.85rem; color: #ccc;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><i class='bx bx-tv'></i> Serie:</span> <span id="stat-series" style="color:white; font-weight:bold;">...</span></div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span><i class='bx bx-film'></i> Film:</span> <span id="stat-movies" style="color:white; font-weight:bold;">...</span></div>
-        <div style="display:flex; justify-content:space-between;"><span><i class='bx bx-list-plus'></i> La mia lista:</span> <span id="stat-list" style="color:white; font-weight:bold;">...</span></div>
+      <div id="user-stats-container" style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; font-size: 0.85rem; color: #eee; display:flex; justify-content:space-between; text-align:center;">
+        <div><div style="font-size: 1.1rem; font-weight:bold;" id="stat-series">...</div><div style="font-size: 0.7rem; color:#aaa;">Serie</div></div>
+        <div><div style="font-size: 1.1rem; font-weight:bold;" id="stat-movies">...</div><div style="font-size: 0.7rem; color:#aaa;">Film</div></div>
+        <div><div style="font-size: 1.1rem; font-weight:bold;" id="stat-list">...</div><div style="font-size: 0.7rem; color:#aaa;">Lista</div></div>
       </div>
       ${currentUser.telegram_id === '919091829' || currentUser.telegram_id === 919091829 ? `
       <div id="admin-users-btn" style="padding: 10px; color:#f5c518; cursor:pointer; font-size:0.9rem; font-weight:bold; transition: background 0.2s; border-radius:4px; margin-bottom: 5px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">

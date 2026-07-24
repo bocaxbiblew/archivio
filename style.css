@@ -16,7 +16,7 @@
   --font-logo: 'Outfit', sans-serif;
   --border-radius: 12px;
   --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-  --nav-height: 70px;
+  --nav-height: 80px;
 }
 
 * {
@@ -26,9 +26,13 @@
 }
 
 body {
+  font-family: 'Inter', sans-serif;
   background-color: var(--bg-color);
+  background-image: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #050512 60%, #000000 100%);
+  background-attachment: fixed;
   color: var(--text-color);
-  font-family: var(--font-main);
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
 }
 
@@ -1092,8 +1096,8 @@ body {
     bottom: calc(env(safe-area-inset-bottom, 0) + 15px);
     left: 50%;
     transform: translateX(-50%) translateZ(0);
-    max-width: 330px;
-    width: 90%;
+    max-width: 370px;
+    width: 95%;
     background: rgba(30, 30, 30, 0.65);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
@@ -1102,7 +1106,7 @@ body {
     z-index: 9999;
     justify-content: space-around;
     align-items: center;
-    padding: 8px 10px;
+    padding: 10px 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
 
@@ -1112,16 +1116,16 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 65px;
-    height: 55px;
+    width: 75px;
+    height: 65px;
     border-radius: 18px;
     transition: background 0.3s ease, color 0.3s ease;
     -webkit-tap-highlight-color: transparent;
-    gap: 3px;
+    gap: 4px;
     color: rgba(255,255,255,0.5);
   }
   .mobile-tab-bar a span {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
     font-weight: 500;
   }
   .mobile-tab-bar a img {
