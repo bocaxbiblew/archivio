@@ -538,7 +538,10 @@ body {
   flex: 0 0 auto;
   width: 320px;
   cursor: pointer;
-  background: #181818;
+  background: rgba(15, 15, 15, 0.65);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255,255,255,0.05);
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3);
@@ -1086,35 +1089,45 @@ body {
   .mobile-tab-bar {
     display: flex !important;
     position: fixed;
-    bottom: env(safe-area-inset-bottom, 0);
-    transform: translateZ(0);
-    left: 0;
-    width: 100%;
-    background: rgba(15, 15, 15, 0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    bottom: calc(env(safe-area-inset-bottom, 0) + 15px);
+    left: 5%;
+    width: 90%;
+    background: rgba(30, 30, 30, 0.65);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 40px;
     z-index: 9999;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
-    padding: 10px 0 22px 0; /* extra bottom for iOS safe area */
+    padding: 6px 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transform: translateZ(0);
   }
 
   .mobile-tab-bar a {
-    color: rgba(255,255,255,0.45);
     text-decoration: none;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 3px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: color 0.2s ease;
+    width: 55px;
+    height: 45px;
+    border-radius: 25px;
+    transition: background 0.3s ease;
     -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-tab-bar a span {
+    display: none;
+  }
+  .mobile-tab-bar a img {
+    transition: opacity 0.3s ease;
   }
 
   .mobile-tab-bar a.active {
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .mobile-tab-bar a.active img {
+    opacity: 1 !important;
   }
 
   .mobile-tab-bar a i {

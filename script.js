@@ -1761,8 +1761,10 @@ document.addEventListener('DOMContentLoaded', () => {
       position: absolute;
       right: 20px;
       top: 70px;
-      background: #1a1a1a;
-      border: 1px solid #333;
+      background: rgba(15, 15, 15, 0.65);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 8px;
       padding: 10px;
       z-index: 1000;
