@@ -26,6 +26,28 @@ if (currentUser && !window.location.pathname.includes('login.html')) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Theme Toggle Logic
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-mode');
+      themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
+    }
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      if (document.body.classList.contains('light-mode')) {
+        localStorage.setItem('theme', 'light');
+        themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
+      } else {
+        localStorage.setItem('theme', 'dark');
+        themeToggle.innerHTML = "<i class='bx bx-sun'></i>";
+      }
+    });
+  }
+
   // --- UI/UX & Navbar Scroll ---
   window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
@@ -1797,9 +1819,12 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     dropdown.innerHTML = `
       <div style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; display:flex; align-items:center; gap: 10px;">
-        <div style="width: 35px; height: 35px; border-radius: 50%; background: #ffcc00; display:flex; justify-content:center; align-items:center; font-weight:bold; color:black;">
-          ${(currentUser.username || 'U')[0].toUpperCase()}
-        </div>
+        ${currentUser.profile_pic ? 
+          `<img src="${currentUser.profile_pic}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">` : 
+          `<div style="width: 35px; height: 35px; border-radius: 50%; background: #ffcc00; display:flex; justify-content:center; align-items:center; font-weight:bold; color:black;">
+             ${(currentUser.username || 'U')[0].toUpperCase()}
+           </div>`
+        }
         <div style="flex-grow:1;">
           <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
           <p style="margin:0; font-size:0.7rem; color:#aaa;">ID: ${currentUser.telegram_id || 'Sconosciuto'}</p>
@@ -1894,7 +1919,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Admin UI
     const adminBtn = document.getElementById('admin-users-btn');
     if (adminBtn) {
-      adminBtn.addEventListener('click', async () => {
+      adminBtn.addEventListener('click', () => {
+        window.location.href = 'admin_users.html';
+      });
+      // Skip the old modal logic
+      /*
         adminBtn.innerText = 'Caricamento...';
         try {
           const res = await fetch(`${API_BASE}/admin/users`, {
@@ -2005,7 +2034,7 @@ document.addEventListener('DOMContentLoaded', () => {
           console.error(e);
           adminBtn.innerHTML = "<i class='bx bx-crown'></i> Gestione Admin (Utenti)";
         }
-      });
+      });*/
     }
 
     document.getElementById('logout-btn').addEventListener('click', () => {
@@ -2058,20 +2087,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'gallery-overlay';
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px;';
+      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(3,3,15,0.95); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);';
       overlay.innerHTML = `
-        <div class="search-container" style="max-width: 800px; width: 100%;">
-          <button class="close-search" id="close-gallery"><i class='bx bx-x'></i></button>
-          <h2 style="color:#fff; margin-bottom: 1rem;">Gestione Immagini</h2>
+        <div class="search-container" style="max-width: 800px; width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 2.5rem; backdrop-filter: blur(20px); position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+          <button class="close-search" id="close-gallery" style="top: 1.5rem; right: 1.5rem;"><i class='bx bx-x'></i></button>
+          <h2 style="color:#fff; margin-bottom: 1.5rem; font-size: 2rem; text-align: center;"><i class='bx bx-images' style="color:#ffcc00; margin-right: 10px;"></i>Gestione Immagini</h2>
           
-          <div class="tabs" style="margin-bottom:1rem; border-bottom:1px solid #333; display:flex; gap:1rem;">
-            <button class="tab-btn active" data-tab="posters" style="background:none; border:none; color:white; padding:10px; cursor:pointer; font-weight:bold; border-bottom:2px solid #ffcc00;">Poster</button>
-            <button class="tab-btn" data-tab="backdrops" style="background:none; border:none; color:#aaa; padding:10px; cursor:pointer;">Sfondi</button>
-            <button class="tab-btn" data-tab="logos" style="background:none; border:none; color:#aaa; padding:10px; cursor:pointer;">Loghi</button>
+          <div class="tabs" style="margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; gap:1rem; justify-content: center;">
+            <button class="tab-btn active" data-tab="posters" style="background:none; border:none; color:white; padding:10px 20px; cursor:pointer; font-weight:bold; border-bottom:2px solid #ffcc00; font-size: 1.1rem; transition: color 0.3s;">Poster</button>
+            <button class="tab-btn" data-tab="backdrops" style="background:none; border:none; color:rgba(255,255,255,0.5); padding:10px 20px; cursor:pointer; font-size: 1.1rem; border-bottom:2px solid transparent; transition: color 0.3s;">Sfondi</button>
+            <button class="tab-btn" data-tab="logos" style="background:none; border:none; color:rgba(255,255,255,0.5); padding:10px 20px; cursor:pointer; font-size: 1.1rem; border-bottom:2px solid transparent; transition: color 0.3s;">Loghi</button>
           </div>
           
-          <div id="gallery-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; max-height: 60vh; overflow-y: auto; padding: 10px 0;">
-            <p style="color:#aaa; text-align:center; grid-column:1/-1;">Caricamento immagini da TMDB...</p>
+          <div id="gallery-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; max-height: 60vh; overflow-y: auto; padding: 10px 10px 10px 0;">
+            <p style="color:rgba(255,255,255,0.5); text-align:center; grid-column:1/-1; font-size: 1.2rem;">Caricamento immagini da TMDB...</p>
           </div>
         </div>
       `;
@@ -2149,9 +2178,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', () => {
           tabBtns.forEach(b => {
             b.classList.remove('active');
-            b.style.color = '#aaa';
+            b.style.color = 'rgba(255,255,255,0.5)';
             b.style.fontWeight = 'normal';
-            b.style.borderBottom = 'none';
+            b.style.borderBottom = '2px solid transparent';
           });
           btn.classList.add('active');
           btn.style.color = 'white';
@@ -2265,6 +2294,28 @@ Object.assign(pTrContainer.style, {
   backdropFilter: 'blur(5px)'
 });
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Theme Toggle Logic
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-mode');
+      themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
+    }
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      if (document.body.classList.contains('light-mode')) {
+        localStorage.setItem('theme', 'light');
+        themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
+      } else {
+        localStorage.setItem('theme', 'dark');
+        themeToggle.innerHTML = "<i class='bx bx-sun'></i>";
+      }
+    });
+  }
+
   // Only add if on mobile
   if (window.innerWidth <= 768) {
     document.body.appendChild(pTrContainer);

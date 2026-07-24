@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pannello Admin - Archivio Stream</title>
+  <link rel="stylesheet" href="style.css?v=7">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar" style="position: relative;">
+    <div class="nav-left">
+      <a href="javascript:history.back()" class="icon-btn" style="color:white; font-size:1.5rem; text-decoration:none;"><i class='bx bx-chevron-left'></i></a>
+      <h2 style="color:white; margin-left: 15px;"><i class='bx bx-crown' style="color:#f5c518; margin-right: 8px;"></i>Pannello Admin</h2>
+    </div>
+  </nav>
+
+  <div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <p style="color: #aaa; margin-bottom: 2rem;">Gestione degli utenti collegati alla piattaforma.</p>
+    <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 10px;">
+      <p style="color: #fff;">Caricamento utenti...</p>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://archiviostream.botitaly.com/api';
+    
+    async function loadUsers() {
+      const userAuth = localStorage.getItem('user_auth');
+      if (!userAuth) {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/admin/users`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: userAuth
+        });
+        const data = await res.json();
+        
+        const container = document.getElementById('admin-users-list');
+        container.innerHTML = '';
+        
+        if (data.success && data.users) {
+          if (data.users.length === 0) {
+             container.innerHTML = '<p style="color:#aaa;">Nessun utente trovato.</p>';
+             return;
+          }
+          data.users.forEach(u => {
+            const shortId = u.telegram_id || u.id.substring(0, 8) + '...';
+            const userCard = document.createElement('div');
+            userCard.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);';
+            userCard.innerHTML = `
+              <div>
+                <p style="margin:0; font-size:1.1rem; font-weight:bold; color:white;">${u.username || 'Sconosciuto'}</p>
+                <p style="margin:0; font-size:0.85rem; color:#aaa;">ID: ${shortId}</p>
+              </div>
+              ${(u.telegram_id !== '919091829' && u.telegram_id !== 919091829) 
+                ? \`<button class="admin-logout-btn" data-id="${u.id}" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:5px; font-weight: bold;"><i class='bx bx-exit'></i> Scollega</button>\`
+                : \`<span style="color:#f5c518; font-weight:bold; font-size:0.9rem;"><i class='bx bx-crown'></i> Superadmin</span>\`
+              }
+            `;
+            
+            const btn = userCard.querySelector('.admin-logout-btn');
+            if(btn) {
+              btn.addEventListener('click', async () => {
+                if(!confirm(\`Vuoi davvero scollegare l'utente ${u.username || shortId}?\`)) return;
+                
+                try {
+                  btn.innerText = 'Attendere...';
+                  const logoutRes = await fetch(`${API_BASE}/admin/users/logout`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ admin_id: JSON.parse(userAuth).id, target_user_id: u.id })
+                  });
+                  const logoutData = await logoutRes.json();
+                  if (logoutData.success) {
+                    userCard.remove();
+                  } else {
+                    alert('Errore: ' + logoutData.error);
+                    btn.innerText = 'Scollega';
+                  }
+                } catch(e) {
+                  alert('Errore di rete');
+                  btn.innerText = 'Scollega';
+                }
+              });
+            }
+            
+            container.appendChild(userCard);
+          });
+        } else {
+          container.innerHTML = '<p style="color:#ff4444;">Non sei autorizzato o si è verificato un errore.</p>';
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('admin-users-list').innerHTML = '<p style="color:#ff4444;">Errore di connessione.</p>';
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html>

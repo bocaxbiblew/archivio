@@ -18,6 +18,51 @@
   --transition: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   --nav-height: 80px;
 }
+body.light-mode {
+  --bg-color: #f0f2f5;
+  --text-color: #111111;
+  --text-muted: #555555;
+  --card-bg: #ffffff;
+  --header-bg: rgba(240, 242, 245, 0.9);
+  --header-glass: rgba(240, 242, 245, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .mobile-tab-bar a img {
+  filter: invert(0);
+}
+
+body.light-mode .mobile-tab-bar a.active {
+  background: rgba(0, 0, 0, 0.1);
+  color: #111111;
+}
+
+body.light-mode .mobile-tab-bar a span {
+  color: #555;
+}
+
+body.light-mode .mobile-tab-bar a.active span {
+  color: #111;
+}
+
+body.light-mode .search-input-wrapper {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+body.light-mode .search-input-wrapper:focus-within {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+body.light-mode #search-input {
+  color: #111;
+}
+body.light-mode #search-input::placeholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+body.light-mode .search-icon {
+  color: rgba(0, 0, 0, 0.4);
+}
+
 
 * {
   margin: 0;

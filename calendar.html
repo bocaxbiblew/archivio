@@ -100,10 +100,24 @@
       <li><a href="calendar.html" class="active">Uscite</a></li>
     </ul>
     <div class="nav-right">
-      <i class='bx bx-search' style="font-size: 1.5rem; cursor: pointer;"></i>
-      <img src="https://i.pravatar.cc/150?img=11" alt="User" class="profile-avatar" style="width: 35px; border-radius: 50%;">
+      <button class="icon-btn" id="theme-toggle"><i class='bx bx-sun'></i></button>
+      <button class="icon-btn" id="open-search"><i class='bx bx-search'></i></button>
+      <button class="icon-btn" id="open-bookmark"><i class='bx bx-bookmark'></i></button>
+      <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar">
     </div>
   </nav>
+
+  <!-- Search Overlay -->
+  <div class="search-overlay" id="search-overlay">
+    <div class="search-container">
+      <button class="close-search" id="close-search"><i class='bx bx-x'></i></button>
+      <div class="search-input-wrapper">
+        <i class='bx bx-search search-icon'></i>
+        <input type="text" id="search-input" placeholder="Cerca film, serie..." autocomplete="off">
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
 
   <!-- Mobile Tab Bar (iOS style) -->
   <div class="mobile-tab-bar">
