@@ -334,6 +334,8 @@ body {
   position: relative;
   z-index: 2;
   max-width: 600px;
+  -webkit-font-smoothing: antialiased;
+  transform: translateZ(0);
 }
 .hero-title-img {
   max-width: 400px;

@@ -70,6 +70,11 @@
           userCard.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);';
           
           var isSuperadmin = (String(u.telegram_id) === '919091829');
+          var isOnline = data.active && data.active.some(a => a.id === u.id);
+          var statusDot = isOnline ? 
+            '<span style="display:inline-block; width:10px; height:10px; background:#4CAF50; border-radius:50%; margin-right:8px; box-shadow: 0 0 8px #4CAF50;" title="Online"></span>' : 
+            '<span style="display:inline-block; width:10px; height:10px; background:#f44336; border-radius:50%; margin-right:8px;" title="Offline"></span>';
+
           var actionHtml = '';
           if (isSuperadmin) {
             actionHtml = '<span style="color:#f5c518; font-weight:bold; font-size:0.9rem;"><i class="bx bx-crown"></i> Superadmin</span>';
@@ -80,8 +85,8 @@
           }
           
           userCard.innerHTML = '<div>' +
-            '<p style="margin:0; font-size:1.1rem; font-weight:bold; color:white;">' + (u.username || 'Sconosciuto') + '</p>' +
-            '<p style="margin:0; font-size:0.85rem; color:#aaa;">ID: ' + shortId + '</p>' +
+            '<p style="margin:0; font-size:1.1rem; font-weight:bold; color:white; display:flex; align-items:center;">' + statusDot + (u.username || 'Sconosciuto') + '</p>' +
+            '<p style="margin:0; font-size:0.85rem; color:#aaa; margin-top:4px;">ID: ' + shortId + '</p>' +
             '</div>' + actionHtml;
           
           var btn = userCard.querySelector('.admin-logout-btn');

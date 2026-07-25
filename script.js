@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
           allItems.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
         } else if (val === 'voti') {
           allItems.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-        } else if (val === 'anno') {
+        } else if (val === 'anno' || val === 'recenti') {
           allItems.sort((a, b) => {
             const dA = new Date(a.release_date || a.first_air_date || '1970-01-01').getTime();
             const dB = new Date(b.release_date || b.first_air_date || '1970-01-01').getTime();
@@ -552,10 +552,13 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } else if (val === 'az') {
           allItems.sort((a, b) => (a.name || a.title || '').localeCompare(b.name || b.title || ''));
-        } else if (val === 'recenti') {
-          // Keep original order (order added to catalog)
+        } else if (val === 'aggiunte') {
+          // Keep original order (order added to catalog, already retrieved from DB chronological)
         }
         
+        // Stop infinite scroll by setting a global flag
+        window.isCatalogSorted = true;
+
         // Render sorted items
         container.innerHTML = '';
         allItems.forEach(data => {
@@ -617,9 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (filteredList.length > 0) {
       myListSection.style.display = 'block';
       myListCarousel.innerHTML = '';
-      for (const item of filteredList) {
-        const details = await getDetailsLite(item.tmdb_id, item.type);
-        if (details) {
+      const promises = filteredList.map(item => getDetailsLite(item.tmdb_id, item.type).then(details => ({ item, details })));
+      const results = await Promise.allSettled(promises);
+      
+      results.forEach(res => {
+        if (res.status === 'fulfilled' && res.value.details) {
+          const { item, details } = res.value;
           const link = item.type === 'tv' ? `series.html?id=${details.id}` : `movie.html?id=${details.id}`;
           const imgUrl = details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=${encodeURIComponent(details.title || details.name)}`;
           
@@ -629,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
           card.innerHTML = `<img src="${imgUrl}" alt="${details.title || details.name}" loading="lazy">`;
           myListCarousel.appendChild(card);
         }
-      }
+      });
     } else {
       myListSection.style.display = 'none';
     }
@@ -1215,6 +1221,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let currentIndex = 0;
       const CHUNK_SIZE = 15;
       let isLoading = false;
+      window.isCatalogSorted = false;
       
       // Loading sentinel
       const sentinel = document.createElement('div');
@@ -1222,7 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sentinel.innerHTML = 'Caricamento...';
       
       const loadNextChunk = async () => {
-        if (isLoading || currentIndex >= uniqueTmdbIds.length) return;
+        if (isLoading || currentIndex >= uniqueTmdbIds.length || window.isCatalogSorted) return;
         isLoading = true;
         
         const chunk = uniqueTmdbIds.slice(currentIndex, currentIndex + CHUNK_SIZE);
@@ -1349,7 +1356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const genres = data.genres.map(g => g.name).join(', ');
     
     // Fetch global metadata for quality badge
-    let qualityBadge = type === 'tv' ? 'FHD' : '4K / FHD';
+    let qualityBadge = type === 'tv' ? '1080P' : '4K / FHD';
     try {
       const gRes = await fetch(`${API_BASE}/global_metadata/get`, {
         method: 'POST',
@@ -1672,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Rating Button Logic
-    const ratingBtn = document.querySelector('.btn-action-group .action-btn:nth-child(2)');
+    const ratingBtn = document.getElementById('valuta-btn') || document.querySelector('.btn-action-group .action-btn:nth-child(3)');
     if (ratingBtn) {
       let currentRating = 0;
       if (currentUser) {
