@@ -640,6 +640,65 @@ document.addEventListener('DOMContentLoaded', () => {
       myListSection.style.display = 'none';
     }
   }
+  // --- CONTINUE WATCHING ---
+  async function renderContinueWatching() {
+    const section = document.getElementById('continue-watching-section');
+    const carousel = document.getElementById('continue-watching-carousel');
+    if (!section || !carousel || !currentUser) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/episodes/continue_watching`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ user_id: currentUser.id })
+      });
+      const data = await res.json();
+
+      if (!data.success || !data.next_episodes || data.next_episodes.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      carousel.innerHTML = '';
+
+      const promises = data.next_episodes.map(ep =>
+        getDetailsLite(ep.tmdb_id, 'tv').then(details => ({ ep, details }))
+      );
+      const results = await Promise.allSettled(promises);
+
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value.details) {
+          const { ep, details } = r.value;
+          const imgUrl = details.poster_path
+            ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
+            : `https://placehold.co/400x600/1a1a1a/fff?text=${encodeURIComponent(details.name || details.title)}`;
+
+          const seasonStr = String(ep.season).padStart(2, '0');
+          const episodeStr = String(ep.episode).padStart(2, '0');
+          const badge = `S${seasonStr}E${episodeStr}`;
+
+          const card = document.createElement('a');
+          card.href = `series.html?id=${ep.tmdb_id}`;
+          card.className = 'card card-poster continue-watching-card';
+          card.innerHTML = `
+            <img src="${imgUrl}" alt="${details.name || details.title}" loading="lazy">
+            <div class="cw-badge">${badge}</div>
+            <div class="cw-title">${details.name || details.title}</div>
+          `;
+          carousel.appendChild(card);
+        }
+      });
+
+      // Se nessuna card è stata generata (tutti i fetch falliti), nascondi la sezione
+      if (carousel.children.length === 0) {
+        section.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('Errore continue watching:', e);
+      section.style.display = 'none';
+    }
+  }
 
   async function initHome() {
     const CACHE_VERSION = 5; // v5: stripped objects to fit localStorage
@@ -699,6 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (allMoviesSection) allMoviesSection.style.display = 'none';
 
             await initSlider(data.sliderTitles);
+            renderContinueWatching(); // Non-blocking: carica in parallelo
             return; // Esce senza fare chiamate API
           } else if (!catalogChanged) {
             console.warn('[HomeCache] Cache had empty sliderTitles — refetching');
@@ -952,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { console.error('[HomeCache] FAILED to save cache:', e); }
 
     await initSlider(sliderTitles);
+    renderContinueWatching(); // Non-blocking: carica in parallelo
   }
 
   async function initSlider(items) {
