@@ -670,9 +670,9 @@ document.addEventListener('DOMContentLoaded', () => {
       results.forEach(r => {
         if (r.status === 'fulfilled' && r.value.details) {
           const { ep, details } = r.value;
-          const imgUrl = details.poster_path
-            ? `https://image.tmdb.org/t/p/w500${details.poster_path}`
-            : `https://placehold.co/400x600/1a1a1a/fff?text=${encodeURIComponent(details.name || details.title)}`;
+          const imgUrl = details.backdrop_path
+            ? `https://image.tmdb.org/t/p/w780${details.backdrop_path}`
+            : (details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : `https://placehold.co/780x440/1a1a1a/fff?text=${encodeURIComponent(details.name || details.title)}`);
 
           const seasonStr = String(ep.season).padStart(2, '0');
           const episodeStr = String(ep.episode).padStart(2, '0');
@@ -680,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const card = document.createElement('a');
           card.href = `series.html?id=${ep.tmdb_id}`;
-          card.className = 'card card-poster continue-watching-card';
+          card.className = 'card cw-card-backdrop';
           card.innerHTML = `
             <img src="${imgUrl}" alt="${details.name || details.title}" loading="lazy">
             <div class="cw-badge">${badge}</div>
