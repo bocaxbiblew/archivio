@@ -593,8 +593,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- ROUTING LOGIC (MOLTO PIU ROBUSTA PER NEOCITIES) ---
   if (document.getElementById('catalog-grid-series')) {
     initCatalog('tv', 'catalog-grid-series');
+    // Trigger sort immediately for default filter (e.g. Popolarità)
+    if (catalogSortSelect && catalogSortSelect.value !== 'aggiunte') {
+      catalogSortSelect.dispatchEvent(new Event('change'));
+    }
   } else if (document.getElementById('catalog-grid-movies')) {
     initCatalog('movie', 'catalog-grid-movies');
+    if (catalogSortSelect && catalogSortSelect.value !== 'aggiunte') {
+      catalogSortSelect.dispatchEvent(new Event('change'));
+    }
   } else if (document.getElementById('detail-hero')) {
     // Siamo in una pagina dettagli. Controlliamo l'url per sapere se è tv o movie
     const isMovie = window.location.pathname.includes('movie');
@@ -679,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const badge = `S${seasonStr}E${episodeStr}`;
 
           const card = document.createElement('a');
-          card.href = `series.html?id=${ep.tmdb_id}`;
+          card.href = `series.html?id=${ep.tmdb_id}&season=${ep.season}`;
           card.className = 'card cw-card-backdrop';
           card.innerHTML = `
             <img src="${imgUrl}" alt="${details.name || details.title}" loading="lazy">
@@ -1618,7 +1625,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      await renderEpisodes(1);
+      const urlSeason = urlParams.get('season');
+      let initialSeason = 1;
 
       const seasonSelect = document.getElementById('season-select');
       
@@ -1635,10 +1643,17 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
 
+        if (urlSeason && Array.from(seasonSelect.options).some(o => o.value === urlSeason)) {
+          initialSeason = Number(urlSeason);
+          seasonSelect.value = urlSeason;
+        }
+
         seasonSelect.addEventListener('change', async (e) => {
           await renderEpisodes(e.target.value);
         });
       }
+
+      await renderEpisodes(initialSeason);
     } // FINE BLOCCO if (type === 'tv')
 
     // Movie Watched Logic
@@ -1905,7 +1920,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (diffDays === 1) badgeText = 'Domani';
         else badgeText = `Tra ${diffDays} giorni`;
 
-        const imgUrl = ep.poster_path ? `https://image.tmdb.org/t/p/w200${ep.poster_path}` : `https://placehold.co/75x75/1a1a1a/fff?text=EP`;
+        const imgUrl = ep.backdrop_path ? `https://image.tmdb.org/t/p/w780${ep.backdrop_path}` : (ep.poster_path ? `https://image.tmdb.org/t/p/w200${ep.poster_path}` : `https://placehold.co/120x68/1a1a1a/fff?text=EP`);
 
         // Format short date like "venerdì · 23:00" or "lug 20 · 2:00"
         const dayName = dateObj.toLocaleDateString('it-IT', { weekday: 'long', timeZone: 'Europe/Rome' });
@@ -1969,7 +1984,10 @@ document.addEventListener('DOMContentLoaded', () => {
            </div>`
         }
         <div style="flex-grow:1;">
-          <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
+            <i class='bx bx-pencil' style="color: #aaa; font-size: 0.9rem;"></i>
+          </div>
           <p style="margin:0; font-size:0.7rem; color:#aaa;">ID: ${currentUser.telegram_id || 'Sconosciuto'}</p>
         </div>
         <button id="save-profile-btn" style="background:transparent; color:#ffcc00; border:none; cursor:pointer; padding:5px;"><i class='bx bx-check' style="font-size:1.5rem;"></i></button>
@@ -2317,16 +2335,19 @@ document.addEventListener('DOMContentLoaded', () => {
     Object.assign(pTrContainer.style, {
       position: 'fixed', top: '-60px', left: '0', width: '100%', height: '60px',
       display: 'flex', justifyContent: 'center', alignItems: 'center',
-      zIndex: '9999', transition: 'top 0.2s', background: 'rgba(0,0,0,0.5)',
+      zIndex: '9999', transition: 'top 0.3s ease', background: 'rgba(0,0,0,0.5)',
       backdropFilter: 'blur(5px)'
     });
     document.body.appendChild(pTrContainer);
 
     let startY = 0;
     let isPulling = false;
+    const RESISTANCE = 0.4; // drag feels heavier
+    const SHOW_THRESHOLD = 120; // px of raw drag needed to show indicator
+    const TRIGGER_THRESHOLD = 150; // px of raw drag needed to trigger refresh
 
     document.body.addEventListener('touchstart', (e) => {
-      if (window.scrollY <= 0) {
+      if (window.scrollY <= 5) {
         startY = e.touches[0].clientY;
         isPulling = true;
       }
@@ -2335,19 +2356,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('touchmove', (e) => {
       if (!isPulling) return;
       const currentY = e.touches[0].clientY;
-      if (currentY > startY && window.scrollY <= 0) {
-        if (currentY - startY > 60) {
+      const rawDelta = currentY - startY;
+      if (rawDelta > 0 && window.scrollY <= 5) {
+        const resistedDelta = rawDelta * RESISTANCE;
+        if (rawDelta > SHOW_THRESHOLD) {
           pTrContainer.style.top = '0px';
         }
       } else {
         isPulling = false;
+        pTrContainer.style.top = '-60px';
       }
     }, {passive: true});
 
     document.body.addEventListener('touchend', (e) => {
       if (isPulling) {
         const endY = e.changedTouches[0].clientY;
-        if (endY - startY > 80 && window.scrollY <= 0) {
+        if (endY - startY > TRIGGER_THRESHOLD && window.scrollY <= 5) {
           pTrContainer.innerHTML = '<i class="bx bx-loader-alt bx-spin" style="font-size:2rem; color:var(--primary-color);"></i><span style="margin-left:10px; color:white;">Aggiornamento...</span>';
           setTimeout(() => location.reload(), 500);
         } else {

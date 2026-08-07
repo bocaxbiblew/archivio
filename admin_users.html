@@ -63,6 +63,17 @@
           container.innerHTML = '<p style="color:#aaa;">Nessun utente trovato.</p>';
           return;
         }
+
+        usersList.sort(function(a, b) {
+           var aOnline = data.active && data.active.some(act => act.id === a.id) ? 1 : 0;
+           var bOnline = data.active && data.active.some(act => act.id === b.id) ? 1 : 0;
+           return bOnline - aOnline;
+        });
+
+        var totalBanner = document.createElement('div');
+        totalBanner.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; font-size: 1.2rem; color: #f5c518; text-align: center; border: 1px solid rgba(245,197,24,0.3);';
+        totalBanner.innerHTML = '<i class="bx bx-group"></i> Totale Utenti Registrati: ' + usersList.length;
+        container.parentNode.insertBefore(totalBanner, container);
         
         usersList.forEach(function(u) {
           var shortId = String(u.telegram_id || u.id || '').substring(0, 10);

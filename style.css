@@ -307,7 +307,7 @@ body {
   height: 85vh;
   width: 100%;
   background-size: cover;
-  background-position: center;
+  background-position: center 20%;
   display: flex;
   align-items: flex-end;
   padding: 0 3rem 2rem 3rem;
@@ -508,6 +508,10 @@ body {
 @media (max-width: 768px) {
   .navbar { padding: 1rem 1.5rem !important; }
   .detail-top-nav { padding: 1rem 1.5rem !important; }
+  .hero {
+    height: 55vh;
+    background-position: center 25%;
+  }
   .episode-card {
     width: 220px;
   }

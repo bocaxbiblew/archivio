@@ -253,6 +253,7 @@
     <div class="error-msg" id="error-msg">Codice errato o scaduto.</div>
     
     <input type="text" id="otp-input" class="login-input" placeholder="000000" maxlength="6" autocomplete="off">
+    <input type="text" id="name-input" class="login-input" placeholder="Il tuo nome (es. Luca)" autocomplete="off" style="display: none; letter-spacing: normal;">
     <button class="login-btn" id="login-btn">Entra</button>
     
     <a href="https://t.me/superbase_db_bot" target="_blank" class="telegram-link">Richiedi codice tramite Telegram</a>
@@ -281,8 +282,49 @@
         const data = await res.json();
         
         if(res.ok && data.success) {
-          localStorage.setItem('user_auth', JSON.stringify(data.user));
-          window.location.href = 'index.html';
+          const user = data.user;
+          
+          // Se non ha un nome, lo chiediamo prima di farlo entrare
+          if (!user.username || user.username.trim() === '') {
+            document.getElementById('otp-input').style.display = 'none';
+            const nameInput = document.getElementById('name-input');
+            nameInput.style.display = 'block';
+            
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.innerText = 'Salva e Entra';
+            errorMsg.style.display = 'none';
+            
+            // Sostituiamo il bottone per cambiare il listener
+            const newBtn = loginBtn.cloneNode(true);
+            loginBtn.parentNode.replaceChild(newBtn, loginBtn);
+            
+            newBtn.addEventListener('click', async () => {
+              const name = nameInput.value.trim();
+              if (!name) {
+                errorMsg.textContent = "Inserisci un nome valido.";
+                errorMsg.style.display = 'block';
+                return;
+              }
+              try {
+                // Salviamo il nome sul DB
+                await fetch(`${API_URL}/user/profile/update`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ user_id: user.telegram_id || user.id, username: name })
+                });
+                user.username = name;
+                localStorage.setItem('user_auth', JSON.stringify(user));
+                window.location.href = 'index.html';
+              } catch (err) {
+                errorMsg.textContent = "Errore durante il salvataggio del nome.";
+                errorMsg.style.display = 'block';
+              }
+            });
+          } else {
+            // Ha già un nome, procedi
+            localStorage.setItem('user_auth', JSON.stringify(user));
+            window.location.href = 'index.html';
+          }
         } else {
           errorMsg.textContent = data.error || 'Errore di accesso.';
           errorMsg.style.display = 'block';
