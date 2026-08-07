@@ -1779,7 +1779,11 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ user_id: currentUser.id, tmdb_id: id })
           });
           const rData = await res.json();
-          if (rData.success && rData.rating) currentRating = rData.rating;
+          if (rData.success && rData.rating) {
+            currentRating = rData.rating;
+            // Persistenza visiva: mostra il voto sul bottone al caricamento
+            ratingBtn.innerHTML = `<i class='bx bxs-star' style='color:#f5a623'></i> <span>${currentRating}</span>`;
+          }
         } catch(e) {}
       }
 
@@ -1942,6 +1946,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('a');
         card.className = 'calendar-card';
         card.href = `series.html?id=${ep.tmdb_id}`;
+        card.dataset.tmdbId = String(ep.tmdb_id);
         card.innerHTML = `
           <img class="cal-poster" src="${imgUrl}" alt="${ep.series_title}">
           <div class="cal-info">
@@ -1953,6 +1958,45 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         grid.appendChild(card);
       });
+
+      // --- Filtro "Solo la mia lista" ---
+      const toggle = document.getElementById('cal-toggle');
+      if (toggle && currentUser) {
+        let myListIds = null; // cache
+
+        toggle.addEventListener('click', async () => {
+          toggle.classList.toggle('active');
+          const isActive = toggle.classList.contains('active');
+
+          if (isActive) {
+            if (!myListIds) {
+              const list = await getMyList();
+              myListIds = new Set(list.map(item => String(item.tmdb_id)));
+            }
+            grid.querySelectorAll('.calendar-card').forEach(card => {
+              card.style.display = myListIds.has(card.dataset.tmdbId) ? '' : 'none';
+            });
+            // Mostra messaggio se nessuna card visibile
+            const visibleCards = grid.querySelectorAll('.calendar-card[style=""], .calendar-card:not([style])');
+            let emptyMsg = grid.querySelector('.cal-empty-filter-msg');
+            if (visibleCards.length === 0 || Array.from(grid.querySelectorAll('.calendar-card')).every(c => c.style.display === 'none')) {
+              if (!emptyMsg) {
+                emptyMsg = document.createElement('p');
+                emptyMsg.className = 'cal-empty-filter-msg';
+                emptyMsg.style.cssText = 'text-align:center; color:#aaa; width:100%; padding: 20px 0;';
+                emptyMsg.textContent = 'Nessuna uscita programmata per le serie nella tua lista.';
+                grid.appendChild(emptyMsg);
+              }
+            }
+          } else {
+            grid.querySelectorAll('.calendar-card').forEach(card => {
+              card.style.display = '';
+            });
+            const emptyMsg = grid.querySelector('.cal-empty-filter-msg');
+            if (emptyMsg) emptyMsg.remove();
+          }
+        });
+      }
 
     } catch(e) {
       console.error(e);
@@ -1985,7 +2029,7 @@ document.addEventListener('DOMContentLoaded', () => {
       border-radius: 8px;
       padding: 10px;
       z-index: 1000;
-      min-width: 200px;
+      width: 220px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.8);
     `;
     dropdown.innerHTML = `
@@ -2263,58 +2307,97 @@ document.addEventListener('DOMContentLoaded', () => {
           // --- RATING MODAL ---
   function openRatingModal(tmdb_id, type, currentRating, btnElement, onSuccess) {
     let overlay = document.getElementById('rating-overlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'rating-overlay';
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px;';
-      overlay.innerHTML = `
-        <div style="background:#1a1a1a; padding:30px; border-radius:10px; text-align:center; position:relative; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-          <button id="close-rating" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
-          <h2 style="color:white; margin-top:0;">Valuta questo titolo</h2>
-          <div id="stars-container" style="display:flex; justify-content:center; gap:10px; margin:20px 0; font-size:40px; cursor:pointer;">
-            <i class='bx bx-star star' data-val="1"></i>
-            <i class='bx bx-star star' data-val="2"></i>
-            <i class='bx bx-star star' data-val="3"></i>
-            <i class='bx bx-star star' data-val="4"></i>
-            <i class='bx bx-star star' data-val="5"></i>
-          </div>
-          <button id="save-rating" class="btn btn-primary" style="padding: 10px 20px; font-size:16px;">Salva Valutazione</button>
-        </div>
-      `;
-      document.body.appendChild(overlay);
+    if (overlay) overlay.remove(); // Ricreiamo sempre per evitare stale listeners
 
-      document.getElementById('close-rating').addEventListener('click', () => {
-        overlay.style.display = 'none';
-      });
-    }
+    overlay = document.createElement('div');
+    overlay.id = 'rating-overlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; justify-content: center; align-items: center; padding: 20px;';
+    overlay.innerHTML = `
+      <div style="background:#1a1a1a; padding:30px; border-radius:10px; text-align:center; position:relative; box-shadow: 0 4px 20px rgba(0,0,0,0.5); min-width: 280px;">
+        <button id="close-rating" style="position:absolute; top:10px; right:10px; background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+        <h2 style="color:white; margin-top:0;">Valuta questo titolo</h2>
+        <div id="stars-container" style="display:flex; justify-content:center; gap:4px; margin:20px 0; font-size:44px; cursor:pointer; user-select:none;"></div>
+        <div id="rating-display" style="color:#f5a623; font-size:1.3rem; font-weight:bold; margin-bottom:15px;">0</div>
+        <button id="save-rating" class="btn btn-primary" style="padding: 10px 20px; font-size:16px;">Salva Valutazione</button>
+      </div>
+    `;
+    document.body.appendChild(overlay);
 
     let selectedRating = currentRating;
-    const stars = overlay.querySelectorAll('.star');
-    
-    const updateStars = (val) => {
-      stars.forEach(s => {
-        if (parseInt(s.dataset.val) <= val) {
-          s.className = 'bx bxs-star star';
-          s.style.color = '#ffcc00';
-        } else {
-          s.className = 'bx bx-star star';
-          s.style.color = '#fff';
-        }
-      });
-    };
-    
-    updateStars(selectedRating);
+    const starsContainer = document.getElementById('stars-container');
+    const ratingDisplay = document.getElementById('rating-display');
 
-    stars.forEach(star => {
-      star.onclick = () => {
-        selectedRating = parseInt(star.dataset.val);
-        updateStars(selectedRating);
-      };
+    // Creiamo 5 stelle, ciascuna con due zone cliccabili (sinistra = mezza, destra = piena)
+    for (let i = 1; i <= 5; i++) {
+      const starWrapper = document.createElement('div');
+      starWrapper.style.cssText = 'position:relative; display:inline-block; width:44px; height:44px;';
+
+      // Stella di sfondo (vuota)
+      const starBg = document.createElement('i');
+      starBg.className = 'bx bx-star';
+      starBg.style.cssText = 'position:absolute; top:0; left:0; color:#555; font-size:44px; pointer-events:none;';
+      starWrapper.appendChild(starBg);
+
+      // Stella piena (fill overlay)
+      const starFill = document.createElement('i');
+      starFill.className = 'bx bx-star';
+      starFill.id = `star-fill-${i}`;
+      starFill.style.cssText = 'position:absolute; top:0; left:0; color:#f5a623; font-size:44px; pointer-events:none; clip-path: inset(0 100% 0 0);';
+      starWrapper.appendChild(starFill);
+
+      // Zona click metà sinistra (mezza stella)
+      const leftHalf = document.createElement('div');
+      leftHalf.style.cssText = 'position:absolute; top:0; left:0; width:50%; height:100%; cursor:pointer; z-index:2;';
+      leftHalf.addEventListener('click', () => {
+        selectedRating = i - 0.5;
+        updateStarsDisplay(selectedRating);
+      });
+      starWrapper.appendChild(leftHalf);
+
+      // Zona click metà destra (stella piena)
+      const rightHalf = document.createElement('div');
+      rightHalf.style.cssText = 'position:absolute; top:0; right:0; width:50%; height:100%; cursor:pointer; z-index:2;';
+      rightHalf.addEventListener('click', () => {
+        selectedRating = i;
+        updateStarsDisplay(selectedRating);
+      });
+      starWrapper.appendChild(rightHalf);
+
+      starsContainer.appendChild(starWrapper);
+    }
+
+    function updateStarsDisplay(val) {
+      for (let i = 1; i <= 5; i++) {
+        const fill = document.getElementById(`star-fill-${i}`);
+        if (val >= i) {
+          // Stella piena
+          fill.className = 'bx bxs-star';
+          fill.style.clipPath = 'none';
+        } else if (val >= i - 0.5) {
+          // Mezza stella
+          fill.className = 'bx bxs-star';
+          fill.style.clipPath = 'inset(0 50% 0 0)';
+        } else {
+          // Stella vuota
+          fill.className = 'bx bx-star';
+          fill.style.clipPath = 'inset(0 100% 0 0)';
+        }
+      }
+      ratingDisplay.textContent = val > 0 ? val : '';
+    }
+
+    updateStarsDisplay(selectedRating);
+
+    document.getElementById('close-rating').addEventListener('click', () => {
+      overlay.remove();
+    });
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
     });
 
-    const saveBtn = document.getElementById('save-rating');
-    saveBtn.onclick = async () => {
+    document.getElementById('save-rating').onclick = async () => {
       if (selectedRating === 0) return alert('Seleziona almeno una stella!');
+      const saveBtn = document.getElementById('save-rating');
       saveBtn.innerText = 'Salvataggio...';
       try {
         const res = await fetch(`${API_BASE}/ratings/save`, {
@@ -2324,10 +2407,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const rData = await res.json();
         if (rData.success) {
-          alert('Valutazione salvata!');
-          overlay.style.display = 'none';
-          btnElement.innerHTML = `<i class='bx bxs-star' style='color:#f5c518'></i> <span>${selectedRating}</span>`;
+          overlay.remove();
+          btnElement.innerHTML = `<i class='bx bxs-star' style='color:#f5a623'></i> <span>${selectedRating}</span>`;
           if (onSuccess) onSuccess(selectedRating);
+          window.showToast('Valutazione salvata!');
         } else {
           alert('Errore nel salvataggio.');
         }
@@ -2336,8 +2419,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       saveBtn.innerText = 'Salva Valutazione';
     };
-
-    overlay.style.display = 'flex';
   }
 
   // --- Pull to Refresh (mobile only) ---

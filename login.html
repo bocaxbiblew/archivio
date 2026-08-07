@@ -255,7 +255,9 @@
     
     <input type="text" id="otp-input" class="login-input" placeholder="000000" maxlength="6" autocomplete="off">
     <input type="text" id="name-input" class="login-input" placeholder="Il tuo nome (es. Luca)" autocomplete="off" style="display: none; letter-spacing: normal;">
+    <p id="name-hint" style="display:none; color:#aaa; font-size:0.8rem; margin: -5px 0 10px 0;">Se non hai ancora inserito un nome, ti prego di farlo</p>
     <button class="login-btn" id="login-btn">Entra</button>
+    <button class="login-btn" id="skip-btn" style="display:none; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; margin-top: 8px;">Salta</button>
     
     <a href="https://t.me/superbase_db_bot" target="_blank" class="telegram-link">Richiedi codice tramite Telegram</a>
   </div>
@@ -285,47 +287,52 @@
         if(res.ok && data.success) {
           const user = data.user;
           
-          // Se non ha un nome, lo chiediamo prima di farlo entrare
-          if (!user.username || user.username.trim() === '') {
-            document.getElementById('otp-input').style.display = 'none';
-            const nameInput = document.getElementById('name-input');
-            nameInput.style.display = 'block';
-            
-            const loginBtn = document.getElementById('login-btn');
-            loginBtn.innerText = 'Salva e Entra';
-            errorMsg.style.display = 'none';
-            
-            // Sostituiamo il bottone per cambiare il listener
-            const newBtn = loginBtn.cloneNode(true);
-            loginBtn.parentNode.replaceChild(newBtn, loginBtn);
-            
-            newBtn.addEventListener('click', async () => {
-              const name = nameInput.value.trim();
-              if (!name) {
-                errorMsg.textContent = "Inserisci un nome valido.";
-                errorMsg.style.display = 'block';
-                return;
-              }
+          // Mostra sempre il campo nome (opzionale)
+          document.getElementById('otp-input').style.display = 'none';
+          const nameInput = document.getElementById('name-input');
+          nameInput.style.display = 'block';
+          nameInput.value = user.username || '';
+          document.getElementById('name-hint').style.display = 'block';
+          
+          const loginBtn = document.getElementById('login-btn');
+          loginBtn.innerText = 'Salva e Entra';
+          errorMsg.style.display = 'none';
+          
+          const skipBtn = document.getElementById('skip-btn');
+          skipBtn.style.display = 'block';
+          
+          // Nascondi il link Telegram
+          const telLink = document.querySelector('.telegram-link');
+          if (telLink) telLink.style.display = 'none';
+          
+          // Sostituiamo il bottone per cambiare il listener
+          const newBtn = loginBtn.cloneNode(true);
+          loginBtn.parentNode.replaceChild(newBtn, loginBtn);
+          
+          newBtn.addEventListener('click', async () => {
+            const name = nameInput.value.trim();
+            if (name) {
               try {
-                // Salviamo il nome sul DB
                 await fetch(`${API_URL}/user/profile/update`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ user_id: user.telegram_id || user.id, username: name })
                 });
                 user.username = name;
-                localStorage.setItem('user_auth', JSON.stringify(user));
-                window.location.href = 'index.html';
               } catch (err) {
-                errorMsg.textContent = "Errore durante il salvataggio del nome.";
-                errorMsg.style.display = 'block';
+                // Non blocchiamo il login se il salvataggio nome fallisce
+                console.error('Errore salvataggio nome:', err);
               }
-            });
-          } else {
-            // Ha già un nome, procedi
+            }
             localStorage.setItem('user_auth', JSON.stringify(user));
             window.location.href = 'index.html';
-          }
+          });
+          
+          // Bottone Salta — entra senza cambiare nome
+          skipBtn.addEventListener('click', () => {
+            localStorage.setItem('user_auth', JSON.stringify(user));
+            window.location.href = 'index.html';
+          });
         } else {
           errorMsg.textContent = data.error || 'Errore di accesso.';
           errorMsg.style.display = 'block';
