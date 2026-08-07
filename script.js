@@ -246,11 +246,18 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        for (const item of list) {
+        const detailPromises = list.map(async (item) => {
           const details = await getDetailsLite(item.tmdb_id, item.type);
+          return { item, details };
+        });
+
+        const results = await Promise.all(detailPromises);
+
+        results.forEach(({ item, details }) => {
           if (details) {
             const link = item.type === 'tv' ? `series.html?id=${details.id}` : `movie.html?id=${details.id}`;
             const imgUrl = details.poster_path ? `https://image.tmdb.org/t/p/w300${details.poster_path}` : `https://placehold.co/300x450/1a1a1a/fff?text=${encodeURIComponent(details.title || details.name)}`;
+            const labelText = item.type === 'tv' ? 'Serie' : 'Film';
             const card = document.createElement('a');
             card.href = link;
             card.className = 'card card-poster';
@@ -259,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.position = 'relative';
             card.innerHTML = `
               <img src="${imgUrl}" alt="${details.title || details.name}" style="border-radius: 8px;">
+              <span style="position:absolute; bottom:5px; left:5px; background:rgba(0,0,0,0.8); color:#fff; font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:10; border: 1px solid rgba(255,255,255,0.2);">${labelText}</span>
               <button class="remove-bookmark-btn" data-id="${item.tmdb_id}" style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.7); color:white; border:none; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:bold; z-index:10; font-size:16px;">-</button>
             `;
             
@@ -268,13 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
               e.stopPropagation();
               removeBtn.innerText = '...';
               const success = await removeFromMyList(item.tmdb_id);
-              if(success) {
-                card.remove();
-                if(resultsContainer.children.length === 0) {
-                  resultsContainer.innerHTML = '<p style="color:#aaa; text-align:center; width:100%;">La tua lista è vuota. Aggiungi contenuti premendo il pulsante "+" sulla pagina di un film o serie!</p>';
-                }
+              if (success) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.8)';
+                setTimeout(() => card.remove(), 300);
+                setTimeout(() => {
+                  if (resultsContainer.children.length === 0) {
+                    resultsContainer.innerHTML = '<p style="color:#aaa; text-align:center; width:100%;">La tua lista è vuota. Aggiungi contenuti premendo il pulsante "+" sulla pagina di un film o serie!</p>';
+                  }
+                }, 300);
               } else {
                 removeBtn.innerText = '-';
+                alert("Errore durante la rimozione.");
               }
             });
 
