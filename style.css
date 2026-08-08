@@ -512,9 +512,9 @@ body {
   .navbar { padding: 1rem 1.5rem !important; }
   .detail-top-nav { padding: 1rem 1.5rem !important; }
   .hero {
-    background-size: 100% auto;
-    background-position: top center;
-    background-repeat: no-repeat;
+    height: 45vh;
+    background-position: center center;
+    background-size: cover;
   }
   .episode-card {
     width: 220px;
@@ -801,6 +801,7 @@ body {
   flex: 0 0 auto;
   display: flex;
   flex-direction: row;
+  align-items: stretch;
   overflow: hidden;
   padding-bottom: 0;
   opacity: 0;
@@ -810,7 +811,8 @@ body {
 .carousel-container.vertical-view .episode-img-wrapper {
   width: 160px;
   min-width: 160px;
-  height: 100%;
+  display: flex;
+  height: auto;
   aspect-ratio: auto;
 }
 .carousel-container.vertical-view .episode-card-body {
@@ -893,12 +895,9 @@ body {
     display: none !important;
   }
   .hero {
-    padding: 240px 1.5rem 3rem 1.5rem;
+    padding: 120px 1rem 3rem 1rem;
     height: auto;
-    min-height: auto;
-  }
-  .hero::before {
-    background: linear-gradient(0deg, var(--bg-color) 60%, rgba(3,3,15,0) 100%);
+    min-height: 70vh;
   }
   .navbar {
     /* removed background override to keep it transparent */
