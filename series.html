@@ -65,12 +65,17 @@
 
     <!-- Season Selector -->
     <section class="section" style="padding-bottom: 0.5rem; z-index: 10; position: relative;">
-      <div class="season-selector" id="season-selector-container" style="position: relative; display: inline-block;">
-        <select id="season-select" class="season-btn" style="appearance: none; -webkit-appearance: none; padding-right: 30px; cursor: pointer;">
-          <!-- Injected via JS -->
-          <option value="1">Stagione 1</option>
-        </select>
-        <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: white;"></i>
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div class="season-selector" id="season-selector-container" style="position: relative; display: inline-block;">
+          <select id="season-select" class="season-btn" style="appearance: none; -webkit-appearance: none; padding-right: 30px; cursor: pointer;">
+            <!-- Injected via JS -->
+            <option value="1">Stagione 1</option>
+          </select>
+          <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: white;"></i>
+        </div>
+        <button id="ep-view-toggle" class="ep-view-toggle" title="Cambia visualizzazione">
+          <i class='bx bx-list-ul'></i>
+        </button>
       </div>
     </section>
     

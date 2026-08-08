@@ -1663,10 +1663,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
         seasonSelect.addEventListener('change', async (e) => {
           await renderEpisodes(e.target.value);
+          applyViewMode();
+        });
+      }
+
+      // --- Episode View Toggle ---
+      const epViewToggle = document.getElementById('ep-view-toggle');
+      let isVerticalView = localStorage.getItem('ep_view_mode') === 'vertical';
+
+      function applyViewMode() {
+        const epContainer = document.getElementById('episodes-container');
+        if (!epContainer) return;
+        if (isVerticalView) {
+          epContainer.classList.add('vertical-view');
+          if (epViewToggle) {
+            epViewToggle.classList.add('active');
+            epViewToggle.querySelector('i').className = 'bx bx-carousel';
+          }
+          // Staggered animation
+          const cards = epContainer.querySelectorAll('.episode-card');
+          cards.forEach((card, i) => {
+            card.style.animationDelay = `${i * 0.05}s`;
+          });
+        } else {
+          epContainer.classList.remove('vertical-view');
+          if (epViewToggle) {
+            epViewToggle.classList.remove('active');
+            epViewToggle.querySelector('i').className = 'bx bx-list-ul';
+          }
+        }
+      }
+
+      if (epViewToggle) {
+        epViewToggle.addEventListener('click', () => {
+          isVerticalView = !isVerticalView;
+          localStorage.setItem('ep_view_mode', isVerticalView ? 'vertical' : 'horizontal');
+          applyViewMode();
         });
       }
 
       await renderEpisodes(initialSeason);
+      applyViewMode();
     } // FINE BLOCCO if (type === 'tv')
 
     // Movie Watched Logic
