@@ -27,26 +27,7 @@ if (currentUser && !window.location.pathname.includes('login.html')) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // Theme Toggle Logic
-  const themeToggle = document.getElementById('theme-toggle');
-  if (themeToggle) {
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    if (currentTheme === 'light') {
-      document.body.classList.add('light-mode');
-      themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
-    }
 
-    themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('light-mode');
-      if (document.body.classList.contains('light-mode')) {
-        localStorage.setItem('theme', 'light');
-        themeToggle.innerHTML = "<i class='bx bx-moon'></i>";
-      } else {
-        localStorage.setItem('theme', 'dark');
-        themeToggle.innerHTML = "<i class='bx bx-sun'></i>";
-      }
-    });
-  }
 
   // --- UI/UX & Navbar Scroll ---
   window.addEventListener('scroll', () => {
@@ -1416,7 +1397,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Background
     if (data.backdrop_path) {
-      document.getElementById('detail-hero').style.backgroundImage = `url(https://image.tmdb.org/t/p/original${data.backdrop_path})`;
+      const hero = document.getElementById('detail-hero');
+      hero.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${data.backdrop_path})`;
+      
+      // Controlla se abbiamo stili personalizzati per mobile
+      if (window.innerWidth <= 768) {
+         try {
+           const customStylesStr = localStorage.getItem(`backdrop_styles_${id}`);
+           if (customStylesStr) {
+              const customStyles = JSON.parse(customStylesStr);
+              if (customStyles.backgroundPosition) hero.style.backgroundPosition = customStyles.backgroundPosition;
+              if (customStyles.backgroundSize) hero.style.backgroundSize = customStyles.backgroundSize;
+           }
+         } catch(e) {}
+      }
     } else {
       document.getElementById('detail-hero').style.background = '#1a1a1a';
     }
@@ -2288,6 +2282,11 @@ document.addEventListener('DOMContentLoaded', () => {
           div.onmouseout = () => div.style.border = '2px solid transparent';
           
           div.addEventListener('click', async () => {
+            if (currentTab === 'backdrops' && window.innerWidth <= 768) {
+              openBackdropMobileEditor(img.file_path, id, type, currentUser, overlay);
+              return;
+            }
+
             if(!confirm("Vuoi impostare questa immagine come predefinita per il sito?")) return;
             
             const key = currentTab === 'posters' ? 'poster_path' : (currentTab === 'backdrops' ? 'backdrop_path' : 'logo_path');
@@ -2339,6 +2338,148 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(e);
       resultsContainer.innerHTML = '<p style="color:red; text-align:center; grid-column:1/-1;">Errore di caricamento.</p>';
     }
+  }
+
+  function openBackdropMobileEditor(bgPath, tmdbId, type, currentUser, parentOverlay) {
+    const fullUrl = `https://image.tmdb.org/t/p/original${bgPath}`;
+    
+    const editorOverlay = document.createElement('div');
+    editorOverlay.id = 'backdrop-editor-overlay';
+    editorOverlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-color, #03030f); z-index:11000; display:flex; flex-direction:column;';
+    
+    const previewArea = document.createElement('div');
+    previewArea.style.cssText = `
+      width: 100%; 
+      height: 45vh; 
+      background-image: url('${fullUrl}');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+      position: relative;
+      touch-action: none;
+    `;
+    
+    const gradientOverlay = document.createElement('div');
+    gradientOverlay.style.cssText = `
+      position: absolute; top:0; left:0; right:0; bottom:0; pointer-events: none;
+      background: linear-gradient(0deg, var(--bg-color, #03030f) 0%, rgba(3,3,15,0) 40%);
+    `;
+    previewArea.appendChild(gradientOverlay);
+
+    const controlsArea = document.createElement('div');
+    controlsArea.style.cssText = 'flex: 1; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; background:var(--bg-color, #03030f);';
+    
+    controlsArea.innerHTML = `
+      <h3 style="color:white; margin:0; font-size:1.2rem;">Regola Inquadratura</h3>
+      <p style="color:#aaa; font-size:0.9rem; margin:0; text-align:center;">Trascina l'immagine in alto/basso per posizionarla.</p>
+      
+      <div style="width: 100%; max-width: 300px; text-align: center;">
+          <label style="color:#fff; display:block; margin-bottom:10px;">Zoom: <span id="zoom-val">100</span>%</label>
+          <input type="range" id="zoom-slider" min="50" max="250" value="100" style="width:100%;">
+      </div>
+      
+      <div style="display:flex; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px;">
+          <button id="btn-cancel-edit" class="btn" style="flex:1; background:rgba(255,255,255,0.1);">Annulla</button>
+          <button id="btn-save-edit" class="btn btn-primary" style="flex:1;">Salva</button>
+      </div>
+    `;
+    
+    editorOverlay.appendChild(previewArea);
+    editorOverlay.appendChild(controlsArea);
+    document.body.appendChild(editorOverlay);
+    
+    let currentY = 50; 
+    let currentX = 50;
+    let isDragging = false;
+    let startY = 0;
+    let startX = 0;
+    let initialBgY = 50;
+    let initialBgX = 50;
+    
+    const zoomSlider = document.getElementById('zoom-slider');
+    const zoomVal = document.getElementById('zoom-val');
+    
+    function updateBg() {
+       const zoom = zoomSlider.value;
+       const sizeStr = zoom === '100' ? 'cover' : `${zoom}% auto`;
+       previewArea.style.backgroundSize = sizeStr;
+       previewArea.style.backgroundPosition = `${currentX}% ${currentY}%`;
+       zoomVal.innerText = zoom;
+    }
+    
+    zoomSlider.addEventListener('input', updateBg);
+    
+    previewArea.addEventListener('touchstart', (e) => {
+       if(e.touches.length === 1) {
+           isDragging = true;
+           startX = e.touches[0].clientX;
+           startY = e.touches[0].clientY;
+           initialBgX = currentX;
+           initialBgY = currentY;
+       }
+    }, {passive: false});
+    
+    previewArea.addEventListener('touchmove', (e) => {
+       if(isDragging && e.touches.length === 1) {
+           e.preventDefault(); 
+           const dy = e.touches[0].clientY - startY;
+           const dx = e.touches[0].clientX - startX;
+           
+           currentY = Math.max(0, Math.min(100, initialBgY - (dy / previewArea.clientHeight) * 100));
+           currentX = Math.max(0, Math.min(100, initialBgX - (dx / previewArea.clientWidth) * 100));
+           
+           updateBg();
+       }
+    }, {passive: false});
+    
+    previewArea.addEventListener('touchend', () => { isDragging = false; });
+    
+    document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+       document.body.removeChild(editorOverlay);
+    });
+    
+    document.getElementById('btn-save-edit').addEventListener('click', async () => {
+       const zoom = zoomSlider.value;
+       const sizeStr = zoom === '100' ? 'cover' : `${zoom}% auto`;
+       const posStr = `${Math.round(currentX)}% ${Math.round(currentY)}%`;
+       
+       const stylesToSave = {
+          backgroundPosition: posStr,
+          backgroundSize: sizeStr
+       };
+       
+       try {
+           // Save image path to backend
+           const saveRes = await fetch(`${API_BASE}/metadata/save`, {
+               method: 'POST',
+               headers: {'Content-Type':'application/json'},
+               body: JSON.stringify({ 
+                   tmdb_id: parseInt(tmdbId), 
+                   type, 
+                   user_id: currentUser.id, 
+                   backdrop_path: bgPath
+               })
+           });
+           
+           const saveData = await saveRes.json();
+           if (saveData.success) {
+              // Save styles to localStorage
+              localStorage.setItem(`backdrop_styles_${tmdbId}`, JSON.stringify(stylesToSave));
+              localStorage.removeItem('homePageCache_v5');
+              window.showToast("Immagine e inquadratura salvate!");
+              document.body.removeChild(editorOverlay);
+              if(parentOverlay) parentOverlay.style.display = 'none';
+              setTimeout(() => window.location.reload(), 1000);
+           } else {
+              alert('Errore nel salvataggio: ' + saveData.error);
+           }
+       } catch (e) {
+           console.error(e);
+           alert("Errore di rete");
+       }
+    });
+    
+    updateBg();
   }
 
           // --- RATING MODAL ---
