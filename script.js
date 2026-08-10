@@ -2398,7 +2398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <div style="width: 100%; max-width: 300px; text-align: center;">
           <label style="color:#fff; display:block; margin-bottom:10px;">Zoom: <span id="zoom-val">100</span>%</label>
-          <input type="range" id="zoom-slider" min="50" max="250" value="100" style="width:100%;">
+          <input type="range" id="zoom-slider" min="100" max="250" value="100" style="width:100%;">
       </div>
       
       <div style="display:flex; gap: 10px; width: 100%; max-width: 300px; margin-top: 10px;">

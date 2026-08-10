@@ -107,23 +107,31 @@
             '<span style="display:inline-block; width:10px; height:10px; background:#4CAF50; border-radius:50%; margin-right:8px; box-shadow: 0 0 8px #4CAF50;" title="Online"></span>' : 
             '<span style="display:inline-block; width:10px; height:10px; background:#f44336; border-radius:50%; margin-right:8px;" title="Offline"></span>';
 
+          var profilePicHtml = u.profile_pic ? 
+            '<img src="' + u.profile_pic + '" style="width:35px; height:35px; border-radius:50%; object-fit:cover; margin-right: 15px; display:inline-block; vertical-align:middle;">' : 
+            '<div style="width: 35px; height: 35px; border-radius: 50%; background: #f5c518; display:inline-flex; justify-content:center; align-items:center; font-weight:bold; color:black; margin-right:15px; vertical-align:middle;">' + (u.username || 'U')[0].toUpperCase() + '</div>';
+
           var actionHtml = '';
           if (isSuperadmin) {
             actionHtml = '<span style="color:#f5c518; font-weight:bold; font-size:0.9rem;"><i class="bx bx-crown"></i> Superadmin</span>';
           } else if (u.otp_code) {
-            actionHtml = '<button class="admin-logout-btn" data-id="' + u.id + '" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:5px; font-weight: bold;"><i class="bx bx-exit"></i> Scollega</button>';
+            actionHtml = '<button class="admin-logout-btn" data-id="' + u.id + '" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:5px; font-weight: bold; position: relative; z-index: 10;"><i class="bx bx-exit"></i> Scollega</button>';
           } else {
             actionHtml = '<span style="color:#e65100; font-size:0.8rem; font-weight:bold; background:rgba(230,81,0,0.1); padding:4px 8px; border-radius:4px;"><i class="bx bx-error-circle"></i> Disconnesso</span>';
           }
           
-          userCard.innerHTML = '<div>' +
+          userCard.innerHTML = '<div style="display:flex; align-items:center; cursor:pointer; flex-grow:1;" class="user-detail-trigger" data-id="' + u.id + '" data-name="' + (u.username || 'Sconosciuto') + '">' +
+            profilePicHtml + 
+            '<div>' +
             '<p style="margin:0; font-size:1.1rem; font-weight:bold; color:white; display:flex; align-items:center;">' + statusDot + (u.username || 'Sconosciuto') + '</p>' +
             '<p style="margin:0; font-size:0.85rem; color:#aaa; margin-top:4px;">ID: ' + shortId + '</p>' +
-            '</div>' + actionHtml;
+            '</div></div>' +
+            '<div>' + actionHtml + '</div>';
           
           var btn = userCard.querySelector('.admin-logout-btn');
           if (btn) {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function(e) {
+              e.stopPropagation();
               if (!confirm('Vuoi davvero scollegare ' + (u.username || 'questo utente') + '?')) return;
               
               btn.innerText = 'Attendere...';
@@ -161,6 +169,65 @@
           container.appendChild(userCard);
         });
         
+        // Listener per aprire il modale dei log utente
+        document.querySelectorAll('.user-detail-trigger').forEach(function(el) {
+          el.addEventListener('click', async function() {
+            var targetId = this.getAttribute('data-id');
+            var targetName = this.getAttribute('data-name');
+            document.getElementById('modal-user-name').innerHTML = "<i class='bx bx-user' style='color:#f5c518;'></i> " + targetName;
+            document.getElementById('user-logs-modal').style.display = 'flex';
+            
+            document.getElementById('modal-watchlist').innerHTML = "Caricamento...";
+            document.getElementById('modal-watched').innerHTML = "Caricamento...";
+            document.getElementById('modal-vlclogs').innerHTML = "Caricamento...";
+            
+            try {
+              const res = await fetch(API_BASE + '/admin/user/logs', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  user_id: parsed.telegram_id || parsed.id,
+                  otp_code: parsed.otp_code,
+                  target_user_id: targetId
+                })
+              });
+              const d = await res.json();
+              if(d.success) {
+                // Watchlist
+                if(d.watchlist && d.watchlist.length > 0) {
+                  document.getElementById('modal-watchlist').innerHTML = d.watchlist.map(i => "• " + i.title).join('<br>');
+                } else {
+                  document.getElementById('modal-watchlist').innerHTML = "Nessun elemento.";
+                }
+                // Watched
+                if(d.watched && d.watched.length > 0) {
+                  document.getElementById('modal-watched').innerHTML = d.watched.map(i => "• " + i.title + " (S" + i.season_number + " E" + i.episode_number + ")").join('<br>');
+                } else {
+                  document.getElementById('modal-watched').innerHTML = "Nessun elemento.";
+                }
+                // VLC Logs
+                if(d.vlc_requests && d.vlc_requests.length > 0) {
+                  document.getElementById('modal-vlclogs').innerHTML = d.vlc_requests.map(i => {
+                    let epInfo = (i.type === 'tv' && i.season && i.episode) ? " (S" + i.season + " E" + i.episode + ")" : "";
+                    let dStr = new Date(i.created_at).toLocaleString('it-IT');
+                    return "<div style='margin-bottom: 5px;'>• " + i.title + epInfo + " <br><small style='color:#888; padding-left: 10px;'>" + dStr + "</small></div>";
+                  }).join('');
+                } else {
+                  document.getElementById('modal-vlclogs').innerHTML = "Nessuna richiesta.";
+                }
+              } else {
+                document.getElementById('modal-watchlist').innerHTML = "Errore: " + (d.error || 'sconosciuto');
+                document.getElementById('modal-watched').innerHTML = "Errore: " + (d.error || 'sconosciuto');
+                document.getElementById('modal-vlclogs').innerHTML = "Errore: " + (d.error || 'sconosciuto');
+              }
+            } catch(e) {
+              document.getElementById('modal-watchlist').innerHTML = "Errore di rete.";
+              document.getElementById('modal-watched').innerHTML = "Errore di rete.";
+              document.getElementById('modal-vlclogs').innerHTML = "Errore di rete.";
+            }
+          });
+        });
+
       } catch (err) {
         console.error('Admin load error:', err);
         document.getElementById('admin-users-list').innerHTML = '<p style="color:#ff4444;">Errore di connessione al server.</p>';
