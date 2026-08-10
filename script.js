@@ -8,6 +8,26 @@ if (!authData && !window.location.pathname.includes('login.html')) {
 }
 const currentUser = authData ? JSON.parse(authData) : null;
 
+// --- AUTO AUTH INTERCEPTOR ---
+const originalFetch = window.fetch;
+window.fetch = async function() {
+    let [resource, config] = arguments;
+    if (typeof resource === 'string' && resource.startsWith(API_BASE)) {
+        config = config || {};
+        config.headers = config.headers || {};
+        if (currentUser && currentUser.id && currentUser.otp_code) {
+            config.headers['x-user-id'] = currentUser.id;
+            config.headers['x-otp-code'] = currentUser.otp_code;
+        }
+    }
+    const response = await originalFetch(resource, config);
+    if (response.status === 401 && !window.location.pathname.includes('login.html')) {
+        localStorage.removeItem('user_auth');
+        window.location.href = 'login.html';
+    }
+    return response;
+};
+
 // --- SESSION VERIFICATION ---
 if (currentUser && !window.location.pathname.includes('login.html')) {
   fetch(`${API_BASE}/verify-session`, {
@@ -1406,8 +1426,8 @@ document.addEventListener('DOMContentLoaded', () => {
            const customStylesStr = localStorage.getItem(`backdrop_styles_${id}`);
            if (customStylesStr) {
               const customStyles = JSON.parse(customStylesStr);
-              if (customStyles.backgroundPosition) hero.style.backgroundPosition = customStyles.backgroundPosition;
-              if (customStyles.backgroundSize) hero.style.backgroundSize = customStyles.backgroundSize;
+              if (customStyles.backgroundPosition) hero.style.setProperty('background-position', customStyles.backgroundPosition, 'important');
+              if (customStyles.backgroundSize) hero.style.setProperty('background-size', customStyles.backgroundSize, 'important');
            }
          } catch(e) {}
       }
@@ -2090,6 +2110,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <i class='bx bx-crown'></i> Gestione Admin (Utenti)
       </div>
       ` : ''}
+      <a href="https://t.me/c/3620892615/445" target="_blank" style="display:block; text-decoration:none; padding: 10px; color:white; cursor:pointer; font-size:0.9rem; transition: background 0.2s; border-radius:4px; margin-bottom: 5px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
+        <i class='bx bx-message-square-add'></i> Richieste
+      </a>
       <label style="display:block; padding: 10px; color:white; cursor:pointer; font-size:0.9rem; transition: background 0.2s; border-radius:4px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
         <i class='bx bx-camera'></i> Cambia immagine
         <input type="file" id="profile-pic-upload" accept="image/*" style="display:none;">
