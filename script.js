@@ -1,6 +1,5 @@
-// API backend — the URL lives in config.js, which every page loads first.
-// The literal below is only a fallback for the case where it is missing.
-const API_BASE = window.ARCHIVIO_API_BASE || 'https://api-archivio.duckdns.org/api';
+// API Backend sempre sulla VPS
+const API_BASE = 'https://api-archivio.duckdns.org/api';
 
 // --- AUTH CHECK ---
 const authData = localStorage.getItem('user_auth');
@@ -131,23 +130,16 @@ document.addEventListener('DOMContentLoaded', () => {
       searchOverlay.id = 'search-overlay';
       searchOverlay.innerHTML = `
         <div class="search-container">
-          <button class="close-search" id="close-search" aria-label="Chiudi ricerca"><i class='bx bx-x'></i></button>
-          <div class="search-input-wrapper">
-            <i class='bx bx-search search-icon'></i>
-            <input type="text" id="search-input" placeholder="Cerca film, serie..." autocomplete="off">
-          </div>
+          <button class="close-search" id="close-search"><i class='bx bx-x'></i></button>
+          <input type="text" id="search-input" placeholder="Cerca film, serie..." autocomplete="off">
           <div class="search-results" id="search-results"></div>
         </div>
       `;
       document.body.appendChild(searchOverlay);
     }
 
-    // Prefer the explicit id, then sniff the icon but ONLY inside a nav bar.
-    // The previous version took the first .bx-search in the whole document,
-    // which also matched the overlay's own decorative icon.
-    const searchBtn =
-      document.getElementById('open-search') ||
-      document.querySelector('.navbar .bx-search, .detail-top-nav .bx-search')?.closest('button');
+    const searchIcon = document.querySelector('.bx-search');
+    const searchBtn = searchIcon ? searchIcon.closest('button') : document.getElementById('open-search');
     const closeSearchBtn = document.getElementById('close-search');
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
@@ -296,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 300);
               } else {
                 removeBtn.innerText = '-';
-                window.showToast("Errore durante la rimozione.", 'error');
+                alert("Errore durante la rimozione.");
               }
             });
 
@@ -534,35 +526,24 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) { console.error(e); return false; }
   }
 
-  // --- CATALOG LOADER ---
-  // Single loader for the catalog grid. This used to run twice on every page
-  // load: initCatalog() fetched a first chunk and set up infinite scroll, then
-  // the routing block below dispatched a synthetic 'change' event that
-  // re-fetched the entire catalog and rebuilt the grid. Since the default sort
-  // is never 'aggiunte', that event always fired. The full sort below already
-  // renders every title, so it is now the only loader.
+  // --- CATALOG SORT HANDLER ---
   const catalogSortSelect = document.getElementById('catalog-sort');
-
-  async function loadCatalogGrid() {
-      const val = catalogSortSelect ? catalogSortSelect.value : 'aggiunte';
+  if (catalogSortSelect) {
+    catalogSortSelect.addEventListener('change', async () => {
+      const val = catalogSortSelect.value;
       const isSeries = !!document.getElementById('catalog-grid-series');
       const type = isSeries ? 'tv' : 'movie';
       const containerId = isSeries ? 'catalog-grid-series' : 'catalog-grid-movies';
       const container = document.getElementById(containerId);
       if (!container) return;
-
-      container.innerHTML = '<p class="state-msg"><i class="bx bx-loader-alt bx-spin"></i>Caricamento catalogo...</p>';
-
+      
+      container.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#aaa; padding:2rem;"><i class="bx bx-loader-alt bx-spin" style="font-size:2rem;"></i><br>Ordinamento in corso...</p>';
+      
       try {
         const fileRes = await fetch(`${API_BASE}/catalog/titles`);
         const allTitles = await fileRes.json();
         const uniqueTmdbIds = allTitles.filter(c => c.type === type && c.tmdb_id).map(c => c.tmdb_id);
-
-        if (uniqueTmdbIds.length === 0) {
-          container.innerHTML = '<p class="state-msg"><i class="bx bx-film"></i><strong>Catalogo vuoto</strong>Non c\'è ancora nulla qui. Aggiungi titoli dal bot Telegram.</p>';
-          return;
-        }
-
+        
         // Fetch ALL details in parallel (batched)
         const BATCH = 10;
         let allItems = [];
@@ -589,6 +570,9 @@ document.addEventListener('DOMContentLoaded', () => {
           // Keep original order (order added to catalog, already retrieved from DB chronological)
         }
         
+        // Stop infinite scroll by setting a global flag
+        window.isCatalogSorted = true;
+
         // Render sorted items
         container.innerHTML = '';
         allItems.forEach(data => {
@@ -615,17 +599,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       } catch (e) {
         console.error('Sort error:', e);
-        container.innerHTML = '<p class="state-msg error"><i class="bx bx-error-circle"></i><strong>Errore di caricamento</strong>Non è stato possibile caricare il catalogo. Riprova.</p>';
+        container.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:red;">Errore nell\'ordinamento</p>';
       }
-  }
-
-  if (catalogSortSelect) {
-    catalogSortSelect.addEventListener('change', loadCatalogGrid);
+    });
   }
 
   // --- ROUTING LOGIC (MOLTO PIU ROBUSTA PER NEOCITIES) ---
-  if (document.getElementById('catalog-grid-series') || document.getElementById('catalog-grid-movies')) {
-    loadCatalogGrid();
+  if (document.getElementById('catalog-grid-series')) {
+    initCatalog('tv', 'catalog-grid-series');
+    // Trigger sort immediately for default filter (e.g. Popolarità)
+    if (catalogSortSelect && catalogSortSelect.value !== 'aggiunte') {
+      catalogSortSelect.dispatchEvent(new Event('change'));
+    }
+  } else if (document.getElementById('catalog-grid-movies')) {
+    initCatalog('movie', 'catalog-grid-movies');
+    if (catalogSortSelect && catalogSortSelect.value !== 'aggiunte') {
+      catalogSortSelect.dispatchEvent(new Event('change'));
+    }
   } else if (document.getElementById('detail-hero')) {
     // Siamo in una pagina dettagli. Controlliamo l'url per sapere se è tv o movie
     const isMovie = window.location.pathname.includes('movie');
@@ -636,10 +626,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- HOME PAGE LOGIC ---
-  // renderMyList() used to live here. It targeted #my-list-section and
-  // #my-list-carousel, neither of which exists in any HTML file, so it could
-  // never run. "La mia lista" is rendered by initBookmarkOverlay() instead.
+  async function renderMyList(filterType = null) {
+    const myListSection = document.getElementById('my-list-section');
+    const myListCarousel = document.getElementById('my-list-carousel');
+    if (!myListSection || !myListCarousel) return;
 
+    const list = await getMyList();
+    
+    let filteredList = list;
+    if (filterType) {
+      filteredList = list.filter(item => item.type === filterType);
+    }
+
+    if (filteredList.length > 0) {
+      myListSection.style.display = 'block';
+      myListCarousel.innerHTML = '';
+      const promises = filteredList.map(item => getDetailsLite(item.tmdb_id, item.type).then(details => ({ item, details })));
+      const results = await Promise.allSettled(promises);
+      
+      results.forEach(res => {
+        if (res.status === 'fulfilled' && res.value.details) {
+          const { item, details } = res.value;
+          const link = item.type === 'tv' ? `series.html?id=${details.id}` : `movie.html?id=${details.id}`;
+          const imgUrl = details.poster_path ? `https://image.tmdb.org/t/p/w500${details.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=${encodeURIComponent(details.title || details.name)}`;
+          
+          const card = document.createElement('a');
+          card.href = link;
+          card.className = 'card card-poster';
+          card.innerHTML = `<img src="${imgUrl}" alt="${details.title || details.name}" loading="lazy">`;
+          myListCarousel.appendChild(card);
+        }
+      });
+    } else {
+      myListSection.style.display = 'none';
+    }
+  }
   // --- CONTINUE WATCHING ---
   async function renderContinueWatching() {
     const section = document.getElementById('continue-watching-section');
@@ -1235,6 +1256,125 @@ document.addEventListener('DOMContentLoaded', () => {
         container.appendChild(card);
     }
   }
+  // --- CATALOG PAGE LOGIC ---
+  async function initCatalog(type, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const renderGrid = (items) => {
+      container.innerHTML = '';
+      items.forEach(data => {
+        const link = type === 'tv' ? `series.html?id=${data.id}` : `movie.html?id=${data.id}`;
+        const imgUrl = data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=No+Poster`;
+        const titleText = data.name || data.title;
+        const releaseYear = (data.release_date || data.first_air_date || '').substring(0,4);
+        const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+        
+        const card = document.createElement('a');
+        card.href = link;
+        card.className = 'card card-poster catalog-poster';
+        card.innerHTML = `
+          <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+          <div class="poster-overlay">
+            <div class="poster-title">${titleText}</div>
+            <div class="poster-meta">
+              <span>${releaseYear}</span>
+              <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    };
+
+    // Load from remote DB backend
+    try {
+      container.innerHTML = '';
+      
+      const fileRes = await fetch(`${API_BASE}/catalog/titles`);
+      const allTitles = await fileRes.json();
+      
+      const uniqueTmdbIds = allTitles.filter(c => c.type === type && c.tmdb_id).map(c => c.tmdb_id);
+      if (uniqueTmdbIds.length === 0) {
+        container.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Nessun titolo trovato nel catalogo.</p>';
+        return;
+      }
+      
+      let currentIndex = 0;
+      const CHUNK_SIZE = 15;
+      let isLoading = false;
+      window.isCatalogSorted = false;
+      
+      // Loading sentinel
+      const sentinel = document.createElement('div');
+      sentinel.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 2rem; color: #aaa;';
+      sentinel.innerHTML = 'Caricamento...';
+      
+      const loadNextChunk = async () => {
+        if (isLoading || currentIndex >= uniqueTmdbIds.length || window.isCatalogSorted) return;
+        isLoading = true;
+        
+        const chunk = uniqueTmdbIds.slice(currentIndex, currentIndex + CHUNK_SIZE);
+        currentIndex += CHUNK_SIZE;
+        
+        const promises = chunk.map(id => getDetails(id, type));
+        const results = await Promise.allSettled(promises);
+        
+        const validItems = [];
+        results.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) validItems.push(res.value);
+        });
+        
+        // Remove sentinel before appending new items
+        if (sentinel.parentNode === container) container.removeChild(sentinel);
+        
+        validItems.forEach(data => {
+          const link = type === 'tv' ? `series.html?id=${data.id}` : `movie.html?id=${data.id}`;
+          const imgUrl = data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : `https://placehold.co/400x600/1a1a1a/fff?text=No+Poster`;
+          const titleText = data.name || data.title;
+          const releaseYear = (data.release_date || data.first_air_date || '').substring(0,4);
+          const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+          
+          const card = document.createElement('a');
+          card.href = link;
+          card.className = 'card card-poster catalog-poster';
+          card.innerHTML = `
+            <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+            <div class="poster-overlay">
+              <div class="poster-title">${titleText}</div>
+              <div class="poster-meta">
+                <span>${releaseYear}</span>
+                <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        
+        // Re-append sentinel if more items remain
+        if (currentIndex < uniqueTmdbIds.length) {
+          container.appendChild(sentinel);
+        }
+        
+        isLoading = false;
+      };
+      
+      // Setup IntersectionObserver
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          loadNextChunk();
+        }
+      }, { rootMargin: '200px' });
+      
+      container.appendChild(sentinel);
+      observer.observe(sentinel);
+      
+    } catch (e) {
+      console.error('Error loading remote catalog:', e);
+      container.innerHTML = '<h2 style="grid-column: 1/-1; text-align: center; color: red;">Errore nel caricamento del catalogo remoto. Backend offline?</h2>';
+    }
+  }
+
   // --- DETAIL PAGE LOGIC ---
   async function initDetail(type) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1340,8 +1480,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <span>${year}</span>
         ${data.number_of_seasons ? `<span>${data.number_of_seasons} Stagion${data.number_of_seasons > 1 ? 'i' : 'e'}</span>` : ''}
         ${data.runtime ? `<span>${data.runtime} min</span>` : ''}
-        <span class="chip" id="quality-badge-display">${qualityBadge}</span>${editBadgeHtml}
-        <span><i class="bx bxs-star" style="color: var(--rating);"></i> ${data.vote_average ? data.vote_average.toFixed(1) : 'N/A'}</span>
+        <span style="border: 1px solid rgba(255,255,255,0.3); padding: 0 4px; border-radius: 2px;" id="quality-badge-display">${qualityBadge}</span>${editBadgeHtml}
+        <span><i class="bx bxs-star" style="color: #f5c518;"></i> ${data.vote_average ? data.vote_average.toFixed(1) : 'N/A'}</span>
         ${newEpisodesBadge}
       </div>
     `;
@@ -1352,10 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editQualityBtn = document.getElementById('edit-quality-btn');
     if (editQualityBtn) {
       editQualityBtn.addEventListener('click', async () => {
-        const newBadge = await window.uiPrompt('Qualità', qualityBadge, {
-          message: "Inserisci la nuova dicitura per la qualità (es. '4K HDR', 'HD'):",
-          okLabel: 'Salva'
-        });
+        const newBadge = prompt("Inserisci la nuova dicitura per la qualità (es. '4K HDR', 'HD'):", qualityBadge);
         if (newBadge !== null && newBadge.trim() !== "") {
           try {
             const res = await fetch(`${API_BASE}/admin/metadata/update`, {
@@ -1366,12 +1503,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const updateData = await res.json();
             if (updateData.success) {
               document.getElementById('quality-badge-display').innerText = newBadge.trim();
-              window.showToast("Qualità aggiornata per tutti gli utenti.", 'success');
+              alert("Qualità globale aggiornata con successo per tutti gli utenti!");
             } else {
-              window.showToast("Errore: " + updateData.error, 'error');
+              alert("Errore: " + updateData.error);
             }
           } catch(e) {
-            window.showToast("Errore di rete", 'error');
+            alert("Errore di rete");
           }
         }
       });
@@ -1437,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (linkData) {
               imgWrapper.style.cursor = 'pointer';
               imgWrapper.addEventListener('click', () => {
-                if(!currentUser) return window.showToast('Devi effettuare il login!', 'error');
+                if(!currentUser) return alert('Devi effettuare il login!');
                 
                 // 1. Sincrono: Copia del link per non essere bloccati da Safari iOS
                 const linkToCopy = linkData.vlc_link;
@@ -1487,7 +1624,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const watchToggle = card.querySelector('.watched-toggle');
             watchToggle.addEventListener('click', async (e) => {
               e.stopPropagation();
-              if (!currentUser) return window.showToast('Devi effettuare il login per segnare gli episodi visti!', 'error');
+              if (!currentUser) return alert('Devi effettuare il login per segnare gli episodi visti!');
               
               watchToggle.style.opacity = '0.5';
               try {
@@ -1618,7 +1755,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMovieWatchUI();
 
         movieWatchBtn.addEventListener('click', async () => {
-          if (!currentUser) return window.showToast('Devi effettuare il login per segnare i film visti!', 'error');
+          if (!currentUser) return alert('Devi effettuare il login per segnare i film visti!');
           movieWatchBtn.style.opacity = '0.5';
           try {
             const res = await fetch(`${API_BASE}/episodes/watched/toggle`, {
@@ -1660,7 +1797,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       myListBtn.addEventListener('click', async () => {
-        if (!currentUser) return window.showToast('Devi effettuare il login!', 'error');
+        if (!currentUser) return alert('Devi effettuare il login!');
         myListBtn.style.opacity = '0.5';
         if (isInList) {
           const success = await removeFromMyList(id);
@@ -1702,7 +1839,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       ratingBtn.addEventListener('click', () => {
-        if (!currentUser) return window.showToast('Devi effettuare il login per valutare!', 'error');
+        if (!currentUser) return alert('Devi effettuare il login per valutare!');
         openRatingModal(id, type, currentRating, ratingBtn, (newVal) => {
           currentRating = newVal;
         });
@@ -1724,7 +1861,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           try {
             await navigator.clipboard.writeText(window.location.href);
-            window.showToast("Link copiato negli appunti!", 'success');
+            alert("Link copiato negli appunti!");
           } catch(err) {}
         }
       });
@@ -1742,7 +1879,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (mainLinkData) {
         mainPlayBtn.addEventListener('click', () => {
-          if(!currentUser) return window.showToast('Devi effettuare il login!', 'error');
+          if(!currentUser) return alert('Devi effettuare il login!');
           
           // 1. Sincrono: Copia del link per non essere bloccati da Safari iOS
           const linkToCopy = mainLinkData.vlc_link;
@@ -1787,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         mainPlayBtn.style.opacity = '0.5';
         mainPlayBtn.title = 'Link non disponibile';
-        mainPlayBtn.addEventListener('click', () => window.showToast("Questo contenuto non è ancora disponibile nel database.", 'error'));
+        mainPlayBtn.addEventListener('click', () => alert("Questo contenuto non è ancora disponibile nel database."));
       }
     }
 
@@ -1795,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryBtn = document.getElementById('open-gallery-btn');
     if (galleryBtn) {
       galleryBtn.addEventListener('click', () => {
-        if (!currentUser) return window.showToast('Devi effettuare il login!', 'error');
+        if (!currentUser) return alert('Devi effettuare il login!');
         openImageGalleryModal(id, type);
       });
     }
@@ -1806,133 +1943,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- TOAST NOTIFICATION ---
-  let toastTimer = null;
-  window.showToast = function(message, type = 'info') {
+  window.showToast = function(message) {
     let toast = document.getElementById('toast-notification');
     if (!toast) {
       toast = document.createElement('div');
       toast.id = 'toast-notification';
+      toast.className = 'toast-notification';
       document.body.appendChild(toast);
     }
-    toast.className = 'toast-notification ' + type;
-    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
     toast.innerText = message;
-    // Force a reflow so re-showing an already-visible toast restarts the slide-in
-    void toast.offsetWidth;
     toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
-  };
-
-  // --- THEME ---
-  // Every page applies the saved theme from an inline <head> script before
-  // first paint (no flash). These helpers keep it in sync afterwards.
-  window.setTheme = function(theme) {
-    const next = theme === 'light' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch (e) { /* private mode */ }
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', next === 'light' ? '#f4f5f9' : '#03030f');
-  };
-
-  window.getTheme = function() {
-    return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-  };
-
-  // --- DIALOGS ---
-  // Themed replacements for the native confirm()/prompt(). Both return a
-  // Promise, so call sites stay close to what they replaced:
-  //   if (!(await window.uiConfirm('Titolo', 'Sicuro?'))) return;
-  //   const name = await window.uiPrompt('Rinomina', currentValue);
-  function openDialog({ title, message, withInput, inputValue, okLabel, cancelLabel, danger }) {
-    return new Promise(resolve => {
-      const backdrop = document.createElement('div');
-      backdrop.className = 'modal-backdrop';
-
-      const card = document.createElement('div');
-      card.className = 'modal-card';
-      card.setAttribute('role', 'dialog');
-      card.setAttribute('aria-modal', 'true');
-
-      const heading = document.createElement('h3');
-      heading.textContent = title;
-      card.appendChild(heading);
-
-      if (message) {
-        const p = document.createElement('p');
-        p.textContent = message;
-        card.appendChild(p);
-      }
-
-      let input = null;
-      if (withInput) {
-        input = document.createElement('input');
-        input.className = 'modal-input';
-        input.type = 'text';
-        input.value = inputValue || '';
-        card.appendChild(input);
-      }
-
-      const actions = document.createElement('div');
-      actions.className = 'modal-actions';
-
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'btn btn-ghost';
-      cancelBtn.textContent = cancelLabel || 'Annulla';
-
-      const okBtn = document.createElement('button');
-      okBtn.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
-      okBtn.textContent = okLabel || 'Conferma';
-
-      actions.appendChild(cancelBtn);
-      actions.appendChild(okBtn);
-      card.appendChild(actions);
-      backdrop.appendChild(card);
-
-      const cancelValue = withInput ? null : false;
-
-      const close = (value) => {
-        document.removeEventListener('keydown', onKey);
-        backdrop.classList.remove('show');
-        setTimeout(() => backdrop.remove(), 250);
-        resolve(value);
-      };
-
-      const onKey = (e) => {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          close(cancelValue);
-        } else if (e.key === 'Enter' && (!withInput || document.activeElement === input)) {
-          e.preventDefault();
-          close(withInput ? input.value : true);
-        } else if (e.key === 'Tab') {
-          // Keep focus inside the dialog
-          const order = [input, cancelBtn, okBtn].filter(Boolean);
-          const i = order.indexOf(document.activeElement);
-          e.preventDefault();
-          const nextIdx = e.shiftKey ? (i <= 0 ? order.length - 1 : i - 1) : (i + 1) % order.length;
-          order[nextIdx].focus();
-        }
-      };
-
-      cancelBtn.addEventListener('click', () => close(cancelValue));
-      okBtn.addEventListener('click', () => close(withInput ? input.value : true));
-      backdrop.addEventListener('click', (e) => {
-        if (e.target === backdrop) close(cancelValue);
-      });
-      document.addEventListener('keydown', onKey);
-
-      document.body.appendChild(backdrop);
-      requestAnimationFrame(() => backdrop.classList.add('show'));
-      (input || okBtn).focus();
-    });
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
   }
-
-  window.uiConfirm = (title, message, opts = {}) =>
-    openDialog({ title, message, okLabel: opts.okLabel, cancelLabel: opts.cancelLabel, danger: opts.danger });
-
-  window.uiPrompt = (title, value, opts = {}) =>
-    openDialog({ title, message: opts.message, withInput: true, inputValue: value, okLabel: opts.okLabel });
 
   // --- CALENDAR ---
   window.initCalendar = async function() {
@@ -1981,7 +2005,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="cal-ep-title">S${ep.season_number} E${ep.episode_number}: ${ep.episode_title}</div>
             <div class="cal-ep-meta">${shortDate}</div>
           </div>
-          <div class="cal-badge${diffDays === 0 ? ' today' : ''}">${badgeText}</div>
+          <div class="cal-badge" style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; white-space: nowrap;">${badgeText}</div>
         `;
         grid.appendChild(card);
       });
@@ -2044,50 +2068,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dropdown = document.createElement('div');
     dropdown.id = 'user-dropdown-menu';
-    // Layout and theming come from #user-dropdown-menu in style.css. Only the
-    // open/closed state is inline, because the toggle below reads it back.
-    dropdown.style.display = 'none';
-
-    const avatarMarkup = currentUser.profile_pic
-      ? `<img src="${currentUser.profile_pic}" class="avatar-fallback" alt="">`
-      : `<div class="avatar-fallback">${(currentUser.username || 'U')[0].toUpperCase()}</div>`;
-
-    const isOwner = String(currentUser.telegram_id) === '919091829';
-
+    dropdown.style.cssText = `
+      display: none;
+      position: absolute;
+      right: 20px;
+      top: 70px;
+      background: rgba(15, 15, 15, 0.65);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 10px;
+      z-index: 1000;
+      width: 220px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+    `;
     dropdown.innerHTML = `
-      <div class="dropdown-divider">
-        ${avatarMarkup}
-        <div style="flex-grow:1; min-width:0;">
-          <div class="dropdown-name-row">
-            <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}">
-            <i class='bx bx-pencil'></i>
+      <div style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; display:flex; align-items:center; gap: 10px;">
+        ${currentUser.profile_pic ? 
+          `<img src="${currentUser.profile_pic}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">` : 
+          `<div style="width: 35px; height: 35px; border-radius: 50%; background: #ffcc00; display:flex; justify-content:center; align-items:center; font-weight:bold; color:black;">
+             ${(currentUser.username || 'U')[0].toUpperCase()}
+           </div>`
+        }
+        <div style="flex-grow:1;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
+            <i class='bx bx-pencil' style="color: #aaa; font-size: 0.9rem;"></i>
           </div>
-          <p class="dropdown-id">ID: ${currentUser.telegram_id || 'Sconosciuto'}</p>
+          <p style="margin:0; font-size:0.7rem; color:#aaa;">ID: ${currentUser.telegram_id || 'Sconosciuto'}</p>
         </div>
-        <button id="save-profile-btn" class="dropdown-save" aria-label="Salva profilo"><i class='bx bx-check'></i></button>
+        <button id="save-profile-btn" style="background:transparent; color:#ffcc00; border:none; cursor:pointer; padding:5px;"><i class='bx bx-check' style="font-size:1.5rem;"></i></button>
       </div>
-      <div id="user-stats-container" class="dropdown-stats">
-        <div><div class="stat-value" id="stat-series">...</div><div class="stat-label">Serie</div></div>
-        <div><div class="stat-value" id="stat-movies">...</div><div class="stat-label">Film</div></div>
-        <div><div class="stat-value" id="stat-list">...</div><div class="stat-label">Lista</div></div>
+      <div id="user-stats-container" style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; font-size: 0.85rem; color: #eee; display:flex; justify-content:space-between; text-align:center;">
+        <div><div style="font-size: 1.1rem; font-weight:bold;" id="stat-series">...</div><div style="font-size: 0.7rem; color:#aaa;">Serie</div></div>
+        <div><div style="font-size: 1.1rem; font-weight:bold;" id="stat-movies">...</div><div style="font-size: 0.7rem; color:#aaa;">Film</div></div>
+        <div><div style="font-size: 1.1rem; font-weight:bold;" id="stat-list">...</div><div style="font-size: 0.7rem; color:#aaa;">Lista</div></div>
       </div>
-      ${isOwner ? `
-      <div id="admin-users-btn" class="dropdown-row admin-row">
+      ${currentUser.telegram_id === '919091829' || currentUser.telegram_id === 919091829 ? `
+      <div id="admin-users-btn" style="padding: 10px; color:#f5c518; cursor:pointer; font-size:0.9rem; font-weight:bold; transition: background 0.2s; border-radius:4px; margin-bottom: 5px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
         <i class='bx bx-crown'></i> Gestione Admin (Utenti)
       </div>
       ` : ''}
-      <a href="https://t.me/c/3620892615/445" target="_blank" class="dropdown-row">
+      <a href="https://t.me/c/3620892615/445" target="_blank" style="display:block; text-decoration:none; padding: 10px; color:white; cursor:pointer; font-size:0.9rem; transition: background 0.2s; border-radius:4px; margin-bottom: 5px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
         <i class='bx bx-message-square-add'></i> Richieste
       </a>
-      <button type="button" id="theme-toggle-btn" class="dropdown-row">
-        <i class='bx bx-moon'></i> <span id="theme-toggle-label">Tema chiaro</span>
-      </button>
-      <label class="dropdown-row">
+      <label style="display:block; padding: 10px; color:white; cursor:pointer; font-size:0.9rem; transition: background 0.2s; border-radius:4px;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
         <i class='bx bx-camera'></i> Cambia immagine
         <input type="file" id="profile-pic-upload" accept="image/*" style="display:none;">
       </label>
-      <div class="dropdown-sep"></div>
-      <div class="dropdown-row danger" id="logout-btn">
+      <div style="padding: 10px; color:#ff4444; cursor:pointer; font-size:0.9rem; border-top: 1px solid #333; margin-top: 5px; transition: background 0.2s; border-radius:4px;" id="logout-btn" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">
         <i class='bx bx-log-out'></i> Esci dall'account
       </div>
     `;
@@ -2127,7 +2157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveProfileBtn) {
       saveProfileBtn.addEventListener('click', async () => {
         const dName = document.getElementById('profile-name-input').value;
-        saveProfileBtn.classList.add('is-saving');
+        saveProfileBtn.innerText = 'Salvataggio...';
         try {
           const res = await fetch(`${API_BASE}/user/profile/update`, {
             method: 'POST',
@@ -2135,38 +2165,26 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ user_id: currentUser.telegram_id || currentUser.id, username: dName })
           });
           const data = await res.json();
-          saveProfileBtn.classList.remove('is-saving');
           if (data.success) {
-            saveProfileBtn.classList.add('is-saved');
+            saveProfileBtn.innerText = 'Salvato!';
+            saveProfileBtn.style.background = '#4CAF50';
+            saveProfileBtn.style.color = 'white';
             currentUser.username = dName;
             localStorage.setItem('user_auth', JSON.stringify(currentUser));
-            window.showToast('Profilo aggiornato', 'success');
-            setTimeout(() => saveProfileBtn.classList.remove('is-saved'), 2000);
+            setTimeout(() => {
+              saveProfileBtn.innerText = 'Salva Profilo';
+              saveProfileBtn.style.background = 'white';
+              saveProfileBtn.style.color = 'black';
+            }, 2000);
           } else {
-            window.showToast('Errore nel salvataggio del profilo', 'error');
+            saveProfileBtn.innerText = 'Errore';
+            setTimeout(() => saveProfileBtn.innerText = 'Salva Profilo', 2000);
           }
-        } catch(e) {
-          console.error(e);
-          saveProfileBtn.classList.remove('is-saving');
-          window.showToast('Errore di rete', 'error');
+        } catch(e) { 
+          console.error(e); 
+          saveProfileBtn.innerText = 'Errore di rete';
+          setTimeout(() => saveProfileBtn.innerText = 'Salva Profilo', 2000);
         }
-      });
-    }
-
-    // Tema chiaro/scuro
-    const themeBtn = document.getElementById('theme-toggle-btn');
-    if (themeBtn) {
-      const syncThemeLabel = () => {
-        const light = document.documentElement.getAttribute('data-theme') === 'light';
-        themeBtn.querySelector('i').className = light ? 'bx bx-sun' : 'bx bx-moon';
-        document.getElementById('theme-toggle-label').textContent = light ? 'Tema scuro' : 'Tema chiaro';
-      };
-      syncThemeLabel();
-      themeBtn.addEventListener('click', () => {
-        window.setTheme(
-          document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'
-        );
-        syncThemeLabel();
       });
     }
 
@@ -2207,13 +2225,13 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser.profile_pic = base64;
             localStorage.setItem('user_auth', JSON.stringify(currentUser));
             avatars.forEach(a => a.src = base64);
-            window.showToast('Immagine aggiornata con successo!', 'success');
+            window.showToast('Immagine aggiornata con successo!');
           } else {
-            window.showToast('Errore: ' + data.error, 'error');
+            alert('Errore: ' + data.error);
           }
         } catch (err) {
           console.error(err);
-          window.showToast('Errore di connessione', 'error');
+          alert('Errore di connessione');
         }
       };
       reader.readAsDataURL(file);
@@ -2292,12 +2310,7 @@ document.addEventListener('DOMContentLoaded', () => {
               return;
             }
 
-            const confirmed = await window.uiConfirm(
-              'Imposta immagine',
-              'Vuoi impostare questa immagine come predefinita per il sito?',
-              { okLabel: 'Imposta' }
-            );
-            if (!confirmed) return;
+            if(!confirm("Vuoi impostare questa immagine come predefinita per il sito?")) return;
             
             const key = currentTab === 'posters' ? 'poster_path' : (currentTab === 'backdrops' ? 'backdrop_path' : 'logo_path');
             try {
@@ -2313,11 +2326,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.showToast("Immagine salvata! Ricarica la pagina per vedere i cambiamenti.");
                 overlay.style.display = 'none';
               } else {
-                window.showToast('Errore nel salvataggio: ' + saveData.error, 'error');
+                alert('Errore nel salvataggio: ' + saveData.error);
               }
             } catch(e) {
               console.error(e);
-              window.showToast("Errore di rete", 'error');
+              alert("Errore di rete");
             }
           });
 
@@ -2481,11 +2494,11 @@ document.addEventListener('DOMContentLoaded', () => {
               if(parentOverlay) parentOverlay.style.display = 'none';
               setTimeout(() => window.location.reload(), 1000);
            } else {
-              window.showToast('Errore nel salvataggio: ' + saveData.error, 'error');
+              alert('Errore nel salvataggio: ' + saveData.error);
            }
        } catch (e) {
            console.error(e);
-           window.showToast("Errore di rete", 'error');
+           alert("Errore di rete");
        }
     });
     
@@ -2584,7 +2597,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('save-rating').onclick = async () => {
-      if (selectedRating === 0) return window.showToast('Seleziona almeno una stella!', 'error');
+      if (selectedRating === 0) return alert('Seleziona almeno una stella!');
       const saveBtn = document.getElementById('save-rating');
       saveBtn.innerText = 'Salvataggio...';
       try {
@@ -2600,10 +2613,10 @@ document.addEventListener('DOMContentLoaded', () => {
           if (onSuccess) onSuccess(selectedRating);
           window.showToast('Valutazione salvata!');
         } else {
-          window.showToast('Errore nel salvataggio.', 'error');
+          alert('Errore nel salvataggio.');
         }
       } catch(e) {
-        window.showToast('Errore di connessione', 'error');
+        alert('Errore di connessione');
       }
       saveBtn.innerText = 'Salva Valutazione';
     };
