@@ -2,11 +2,29 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Serie - Archivio Stream</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <meta name="description" content="Dettagli, stagioni ed episodi della serie.">
+  <meta name="theme-color" content="#03030f">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Apply the saved theme before first paint so there is no flash of the wrong theme. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css?v=8">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
 
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,30 +36,30 @@
 
   <!-- Detail Top Nav -->
   <nav class="detail-top-nav">
-    <a href="javascript:history.back()" class="icon-btn"><i class='bx bx-chevron-left'></i></a>
-    <button class="icon-btn" id="share-btn"><i class='bx bx-share-alt'></i></button>
+    <a href="javascript:history.back()" class="icon-btn" aria-label="Torna indietro"><i class='bx bx-chevron-left'></i></a>
+    <button class="icon-btn" id="share-btn" aria-label="Condividi"><i class='bx bx-share-alt'></i></button>
   </nav>
 
-  <!-- Mobile Tab Bar (iOS style) -->
+  <!-- Mobile Tab Bar -->
   <div class="mobile-tab-bar">
-    <a href="index.html"><img src="assets/icons/icons8-home-100.png" width="34" height="34" style="opacity: 0.6;"><span>Home</span></a>
-    <a href="catalog_series.html"><img src="assets/icons/icons8-tv-100.png" width="34" height="34" style="opacity: 0.6;"><span>Serie</span></a>
-    <a href="catalog_movies.html"><img src="assets/icons/icons8-movie-100.png" width="34" height="34" style="opacity: 0.6;"><span>Film</span></a>
-    <a href="calendar.html"><img src="assets/icons/icons8-calendar-100.png" width="34" height="34" style="opacity: 0.6;"><span>Uscite</span></a>
+    <a href="index.html" aria-label="Home"><i class='bx bx-home'></i><span>Home</span></a>
+    <a href="catalog_series.html" aria-label="Serie"><i class='bx bx-tv'></i><span>Serie</span></a>
+    <a href="catalog_movies.html" aria-label="Film"><i class='bx bx-movie-play'></i><span>Film</span></a>
+    <a href="calendar.html" aria-label="Uscite"><i class='bx bx-calendar'></i><span>Uscite</span></a>
   </div>
 
-  <!-- Hero Section specific to series -->
-  <header class="hero series-hero" id="detail-hero" style="background-image: none;">
+  <!-- Hero — artwork, title and metadata are injected by script.js -->
+  <header class="hero series-hero" id="detail-hero">
     <div class="hero-fade-overlay" id="hero-fade-overlay"></div>
     <div class="hero-content">
-      <h1 class="hero-title-text" id="detail-title" style="font-family: serif; font-weight: normal; letter-spacing: 2px; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);">Loading...</h1>
-      
+      <h1 class="hero-title-text" id="detail-title">Caricamento...</h1>
+
       <div class="hero-meta" id="detail-meta">
         <!-- Injected via JS -->
       </div>
-      
+
       <button id="main-play-btn" class="btn btn-primary primary-play-btn"><i class='bx bx-play'></i> Guarda S1 E1</button>
-      
+
       <div class="btn-action-group">
         <button class="action-btn">
           <i class='bx bx-check'></i>
@@ -63,30 +81,31 @@
     </div>
   </header>
 
-    <!-- Season Selector -->
-    <section class="section" style="padding-bottom: 0.5rem; z-index: 10; position: relative;">
-      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <div class="season-selector" id="season-selector-container" style="position: relative; display: inline-block;">
-          <select id="season-select" class="season-btn" style="appearance: none; -webkit-appearance: none; padding-right: 30px; cursor: pointer;">
-            <!-- Injected via JS -->
-            <option value="1">Stagione 1</option>
-          </select>
-          <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: white;"></i>
-        </div>
-        <button id="ep-view-toggle" class="ep-view-toggle" title="Cambia visualizzazione">
-          <i class='bx bx-list-ul'></i>
-        </button>
+  <!-- Season selector + episode view toggle -->
+  <section class="section section-tight-bottom">
+    <div class="episode-toolbar">
+      <div class="season-selector">
+        <select id="season-select" class="season-btn" aria-label="Scegli la stagione">
+          <!-- Injected via JS -->
+          <option value="1">Stagione 1</option>
+        </select>
+        <i class='bx bx-chevron-down'></i>
       </div>
-    </section>
-    
-    <!-- Episodes List -->
-    <section class="section" style="padding-top: 0;">
-      <div class="carousel-container" id="episodes-container">
-        <!-- Injected via JS -->
-      </div>
-    </section>
+      <button id="ep-view-toggle" class="ep-view-toggle" title="Cambia visualizzazione" aria-label="Cambia visualizzazione episodi">
+        <i class='bx bx-list-ul'></i>
+      </button>
+    </div>
+  </section>
 
-  <script src="script.js?v=7"></script>
+  <!-- Episodes list -->
+  <section class="section section-tight-top">
+    <div class="carousel-container" id="episodes-container">
+      <!-- Injected via JS -->
+    </div>
+  </section>
+
+  <script src="config.js"></script>
+  <script src="script.js?v=8"></script>
 
   <script>
     if ('serviceWorker' in navigator) {

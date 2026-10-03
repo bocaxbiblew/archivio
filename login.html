@@ -2,10 +2,27 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Private Streaming</title>
-  <link rel="stylesheet" href="style.css?v=7">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Login - Archivio Stream</title>
+  <meta name="theme-color" content="#09090b">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Apply the saved theme before first paint so there is no flash of the wrong theme. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary-color: #8b5cf6;
@@ -24,6 +41,7 @@
       color: #fff;
       overflow: hidden;
       background: #09090b; /* Sfondo ultra scuro moderno */
+      color-scheme: dark;  /* questa pagina resta scura in entrambi i temi */
       height: 100vh;
       display: flex;
       justify-content: center;
@@ -216,6 +234,15 @@
       display: none;
     }
 
+    .login-app-icon {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 15px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
     .telegram-link {
       display: inline-block;
       margin-top: 1.8rem;
@@ -247,23 +274,24 @@
   </div>
 
   <div class="login-container">
-    <img src="assets/unnamed.png" alt="App Icon" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+    <img src="assets/unnamed.png" alt="Archivio" class="login-app-icon">
     <h1 class="logo-title">ARCHIVIO</h1>
     <p class="subtitle">Accesso Privato</p>
-    
-    <div class="error-msg" id="error-msg">Codice errato o scaduto.</div>
-    
-    <input type="text" id="otp-input" class="login-input" placeholder="000000" maxlength="6" autocomplete="off">
-    <input type="text" id="name-input" class="login-input" placeholder="Il tuo nome (es. Luca)" autocomplete="off" style="display: none; letter-spacing: normal;">
+
+    <div class="error-msg" id="error-msg" role="alert">Codice errato o scaduto.</div>
+
+    <input type="text" id="otp-input" class="login-input" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" aria-label="Codice di accesso a 6 cifre">
+    <input type="text" id="name-input" class="login-input" placeholder="Il tuo nome (es. Luca)" autocomplete="name" style="display: none; letter-spacing: normal;">
     <p id="name-hint" style="display:none; color:#aaa; font-size:0.8rem; margin: -5px 0 10px 0;">Se non hai ancora inserito un nome, ti prego di farlo</p>
     <button class="login-btn" id="login-btn">Entra</button>
     <button class="login-btn" id="skip-btn" style="display:none; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #aaa; margin-top: 8px;">Salta</button>
-    
-    <a href="https://t.me/superbase_db_bot" target="_blank" class="telegram-link">Richiedi codice tramite Telegram</a>
+
+    <a href="https://t.me/superbase_db_bot" target="_blank" rel="noopener" class="telegram-link">Richiedi codice tramite Telegram</a>
   </div>
   
+  <script src="config.js"></script>
   <script>
-    const API_URL = 'https://api-archivio.duckdns.org/api';
+    const API_URL = window.ARCHIVIO_API_BASE || 'https://api-archivio.duckdns.org/api';
 
     document.getElementById('login-btn').addEventListener('click', async () => {
       const code = document.getElementById('otp-input').value;

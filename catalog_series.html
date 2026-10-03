@@ -2,11 +2,29 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Catalogo Serie - Archivio Stream</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <meta name="description" content="Tutte le serie TV disponibili su Archivio Stream.">
+  <meta name="theme-color" content="#03030f">
+  <meta name="color-scheme" content="dark light">
+
+  <!-- Apply the saved theme before first paint so there is no flash of the wrong theme. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css?v=8">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
 
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +37,9 @@
   <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-left">
-      <img src="assets/unnamed.png" alt="Logo" class="logo" style="height: 40px; border-radius: 8px; cursor:pointer;" onclick="window.location.href='index.html'">
+      <a href="index.html" aria-label="Archivio — vai alla home">
+        <img src="assets/unnamed.png" alt="Archivio" class="logo">
+      </a>
     </div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
@@ -28,38 +48,34 @@
       <li><a href="calendar.html">Uscite</a></li>
     </ul>
     <div class="nav-right">
-      <a href="https://t.me/+w-cVyPMl7B5lOGY0" target="_blank" class="icon-btn" title="Canale Telegram" style="color: inherit; text-decoration: none; display: flex; align-items: center; justify-content: center;"><i class='bx bx-bulb'></i></a>
-      <button class="icon-btn"><i class='bx bx-search'></i></button>
-      <button class="icon-btn"><i class='bx bx-bookmark'></i></button>
-      <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar">
+      <a href="https://t.me/+w-cVyPMl7B5lOGY0" target="_blank" rel="noopener" class="icon-btn" title="Canale Telegram" aria-label="Canale Telegram"><i class='bx bx-bulb'></i></a>
+      <button class="icon-btn" id="open-search" aria-label="Cerca"><i class='bx bx-search'></i></button>
+      <button class="icon-btn" aria-label="La mia lista"><i class='bx bx-bookmark'></i></button>
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23222'/%3E%3Ccircle cx='20' cy='15' r='6.5' fill='%23888'/%3E%3Cpath d='M20 24c-7 0-12.5 4.6-12.5 10.5V40h25v-5.5C32.5 28.6 27 24 20 24z' fill='%23888'/%3E%3C/svg%3E" alt="Profilo" class="profile-avatar">
     </div>
   </nav>
 
-  <!-- Mobile Tab Bar (iOS style) -->
+  <!-- Mobile Tab Bar -->
   <div class="mobile-tab-bar">
-    <a href="index.html"><img src="assets/icons/icons8-home-100.png" width="34" height="34" style="opacity: 0.6;"><span>Home</span></a>
-    <a href="catalog_series.html" class="active"><img src="assets/icons/icons8-tv-100.png" width="34" height="34"><span>Serie</span></a>
-    <a href="catalog_movies.html"><img src="assets/icons/icons8-movie-100.png" width="34" height="34" style="opacity: 0.6;"><span>Film</span></a>
-    <a href="calendar.html"><img src="assets/icons/icons8-calendar-100.png" width="34" height="34" style="opacity: 0.6;"><span>Uscite</span></a>
+    <a href="index.html" aria-label="Home"><i class='bx bx-home'></i><span>Home</span></a>
+    <a href="catalog_series.html" class="active" aria-label="Serie"><i class='bx bxs-tv'></i><span>Serie</span></a>
+    <a href="catalog_movies.html" aria-label="Film"><i class='bx bx-movie-play'></i><span>Film</span></a>
+    <a href="calendar.html" aria-label="Uscite"><i class='bx bx-calendar'></i><span>Uscite</span></a>
   </div>
 
-    <header class="catalog-header" style="flex-direction: column; align-items: flex-start;">
-    <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
-      <div>
-        <h1 class="catalog-title" style="margin-bottom: 5px;">Tutte le Serie</h1>
-      </div>
-    </div>
-    <div style="margin: 20px 0; display: flex; justify-content: center; width: 100%;">
-      <div style="position: relative; display: inline-block;">
-        <select id="catalog-sort" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 40px 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 1rem; backdrop-filter: blur(10px); outline: none;">
-          <option value="popolarita" style="background: #111; color: white;">Popolarità</option>
-          <option value="voti" style="background: #111; color: white;">Più votati</option>
-          <option value="anno" style="background: #111; color: white;">Anno di uscita</option>
-          <option value="recenti" style="background: #111; color: white;">Recenti (Uscite)</option>
-          <option value="az" style="background: #111; color: white;">A-Z</option>
-          <option value="aggiunte" style="background: #111; color: white;">Aggiunte di recente</option>
+  <header class="catalog-header">
+    <h1 class="catalog-title">Tutte le Serie</h1>
+    <div class="catalog-toolbar">
+      <div class="select-wrapper">
+        <select id="catalog-sort" class="select-control" aria-label="Ordina il catalogo">
+          <option value="popolarita">Popolarità</option>
+          <option value="voti">Più votati</option>
+          <option value="anno">Anno di uscita</option>
+          <option value="recenti">Recenti (Uscite)</option>
+          <option value="az">A-Z</option>
+          <option value="aggiunte">Aggiunte di recente</option>
         </select>
-        <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: white;"></i>
+        <i class='bx bx-chevron-down'></i>
       </div>
     </div>
   </header>
@@ -68,7 +84,8 @@
     <!-- Locandine inserite via JS -->
   </main>
 
-  <script src="script.js?v=7"></script>
+  <script src="config.js"></script>
+  <script src="script.js?v=8"></script>
 
   <script>
     if ('serviceWorker' in navigator) {

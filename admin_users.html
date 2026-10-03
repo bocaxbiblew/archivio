@@ -2,238 +2,300 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Pannello Admin - Archivio Stream</title>
-  <link rel="stylesheet" href="style.css?v=7">
+  <meta name="description" content="Gestione degli utenti della piattaforma.">
+  <meta name="theme-color" content="#03030f">
+  <meta name="color-scheme" content="dark light">
+  <meta name="robots" content="noindex, nofollow">
+
+  <!-- Apply the saved theme before first paint so there is no flash of the wrong theme. -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
+  <link rel="stylesheet" href="style.css?v=8">
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar" style="position: relative;">
+  <nav class="navbar">
     <div class="nav-left">
-      <a href="javascript:history.back()" class="icon-btn" style="color:white; font-size:1.5rem; text-decoration:none;"><i class='bx bx-chevron-left'></i></a>
-      <h2 style="color:white; margin-left: 15px;"><i class='bx bx-crown' style="color:#f5c518; margin-right: 8px;"></i>Pannello Admin</h2>
+      <a href="javascript:history.back()" class="icon-btn" aria-label="Torna indietro"><i class='bx bx-chevron-left'></i></a>
+      <span class="admin-nav-title"><i class='bx bx-crown'></i>Pannello Admin</span>
     </div>
   </nav>
 
-  <div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
-    <p style="color: #aaa; margin-bottom: 2rem;">Gestione degli utenti collegati alla piattaforma.</p>
-    <div id="admin-users-list" style="display: flex; flex-direction: column; gap: 10px;">
-      <p style="color: #fff;"><i class='bx bx-loader-alt bx-spin'></i> Caricamento utenti...</p>
+  <main class="admin-page">
+    <p class="admin-intro">Gestione degli utenti collegati alla piattaforma.</p>
+
+    <!-- Totale / statistiche 24h -->
+    <div class="admin-total-banner" id="admin-stats" hidden></div>
+
+    <div class="admin-list" id="admin-users-list">
+      <p class="state-msg"><i class='bx bx-loader-alt bx-spin'></i>Caricamento utenti...</p>
     </div>
-  </div>
+  </main>
 
-
-  <!-- Modal Log Utente -->
-  <div id="user-logs-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center;">
-    <div style="background:#1a1a1a; width:90%; max-width:600px; max-height:80vh; border-radius:12px; padding:20px; overflow-y:auto; border:1px solid rgba(255,255,255,0.1);">
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px; margin-bottom:15px;">
-        <h3 id="modal-user-name" style="color:white; margin:0;"><i class='bx bx-user' style="color:#f5c518;"></i> Dettaglio Utente</h3>
-        <button onclick="document.getElementById('user-logs-modal').style.display='none'" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;"><i class='bx bx-x'></i></button>
+  <!-- Modal log utente -->
+  <div class="modal-backdrop" id="user-logs-modal" role="dialog" aria-modal="true" aria-labelledby="modal-user-name">
+    <div class="modal-card wide">
+      <div class="admin-modal-header">
+        <h3 id="modal-user-name"><i class='bx bx-user'></i> Dettaglio Utente</h3>
+        <button class="admin-modal-close" id="close-logs-modal" aria-label="Chiudi"><i class='bx bx-x'></i></button>
       </div>
-      
-      <h4 style="color:#f5c518; margin-bottom:5px;"><i class='bx bx-list-ul'></i> La sua Lista</h4>
-      <div id="modal-watchlist" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:15px; max-height:150px; overflow-y:auto; font-size:0.9rem; color:#ccc;">Caricamento...</div>
-      
-      <h4 style="color:#4CAF50; margin-bottom:5px;"><i class='bx bx-play-circle'></i> Prossimo (Iniziati)</h4>
-      <div id="modal-watched" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:15px; max-height:150px; overflow-y:auto; font-size:0.9rem; color:#ccc;">Caricamento...</div>
-      
-      <h4 style="color:#ff4444; margin-bottom:5px;"><i class='bx bx-link-external'></i> Click VLC (Richieste)</h4>
-      <div id="modal-vlclogs" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; max-height:150px; overflow-y:auto; font-size:0.9rem; color:#ccc;">Caricamento...</div>
+
+      <div class="admin-modal-body">
+        <h4 class="admin-log-title watchlist"><i class='bx bx-list-ul'></i> La sua Lista</h4>
+        <div class="admin-log-box" id="modal-watchlist">Caricamento...</div>
+
+        <h4 class="admin-log-title watched"><i class='bx bx-play-circle'></i> Prossimo (Iniziati)</h4>
+        <div class="admin-log-box" id="modal-watched">Caricamento...</div>
+
+        <h4 class="admin-log-title vlc"><i class='bx bx-link-external'></i> Click VLC (Richieste)</h4>
+        <div class="admin-log-box" id="modal-vlclogs">Caricamento...</div>
+      </div>
     </div>
   </div>
 
+  <script src="config.js"></script>
   <script>
+    const API_BASE = window.ARCHIVIO_API_BASE || 'https://api-archivio.duckdns.org/api';
+    const SUPERADMIN_ID = '919091829';
 
-    const API_BASE = 'https://api-archivio.duckdns.org/api';
-    
+    const userAuth = localStorage.getItem('user_auth');
+    if (!userAuth) {
+      window.location.href = 'login.html';
+    }
+
+    const parsed = userAuth ? JSON.parse(userAuth) : {};
+    const myId = parsed.telegram_id || parsed.id;
+
+    const modal = document.getElementById('user-logs-modal');
+
+    function openModal() {
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('close-logs-modal').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+    });
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function isOnline(data, id) {
+      return !!(data.active && data.active.some((a) => String(a.id) === String(id)));
+    }
+
     async function loadUsers() {
-      const userAuth = localStorage.getItem('user_auth');
-      if (!userAuth) {
-        window.location.href = 'index.html';
-        return;
-      }
-      
-      const parsed = JSON.parse(userAuth);
-      
+      const container = document.getElementById('admin-users-list');
+
       try {
-        const res = await fetch(API_BASE + '/admin/users', {
+        const res = await fetch(`${API_BASE}/admin/users`, {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            user_id: parsed.telegram_id || parsed.id,
-            otp_code: parsed.otp_code
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: myId, otp_code: parsed.otp_code })
         });
         const data = await res.json();
-        
-        const container = document.getElementById('admin-users-list');
-        container.innerHTML = '';
-        
-        // The API might return data.users or data.all
-        const usersList = data.users || data.all || [];
-        
+
         if (!data.success) {
-          container.innerHTML = '<p style="color:#ff4444;">Non sei autorizzato: ' + (data.error || 'errore sconosciuto') + '</p>';
+          container.innerHTML = '<p class="state-msg error"><i class="bx bx-lock-alt"></i><strong>Non sei autorizzato</strong>' + escapeHtml(data.error || 'errore sconosciuto') + '</p>';
           return;
         }
-        
+
+        const usersList = data.users || data.all || [];
+        container.innerHTML = '';
+
         if (usersList.length === 0) {
-          container.innerHTML = '<p style="color:#aaa;">Nessun utente trovato.</p>';
+          container.innerHTML = '<p class="state-msg"><i class="bx bx-group"></i>Nessun utente trovato.</p>';
           return;
         }
 
-        usersList.sort(function(a, b) {
-           var aOnline = data.active && data.active.some(act => act.id === a.id) ? 1 : 0;
-           var bOnline = data.active && data.active.some(act => act.id === b.id) ? 1 : 0;
-           return bOnline - aOnline;
+        // Online users float to the top, then alphabetical.
+        usersList.sort((a, b) => {
+          const diff = (isOnline(data, b.id) ? 1 : 0) - (isOnline(data, a.id) ? 1 : 0);
+          if (diff !== 0) return diff;
+          return String(a.username || '').localeCompare(String(b.username || ''), 'it');
         });
 
-        var totalBanner = document.createElement('div');
-        totalBanner.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; font-size: 1.2rem; color: #f5c518; text-align: center; border: 1px solid rgba(245,197,24,0.3);';
-        totalBanner.innerHTML = '<i class="bx bx-group"></i> Totale Utenti Registrati: ' + usersList.length;
-        container.parentNode.insertBefore(totalBanner, container);
-        
-        usersList.forEach(function(u) {
-          var shortId = String(u.telegram_id || u.id || '').substring(0, 10);
-          var userCard = document.createElement('div');
-          userCard.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1);';
-          
-          var isSuperadmin = (String(u.telegram_id) === '919091829');
-          var isOnline = data.active && data.active.some(a => a.id === u.id);
-          var statusDot = isOnline ? 
-            '<span style="display:inline-block; width:10px; height:10px; background:#4CAF50; border-radius:50%; margin-right:8px; box-shadow: 0 0 8px #4CAF50;" title="Online"></span>' : 
-            '<span style="display:inline-block; width:10px; height:10px; background:#f44336; border-radius:50%; margin-right:8px;" title="Offline"></span>';
+        renderStats(data, usersList.length);
 
-          var profilePicHtml = u.profile_pic ? 
-            '<img src="' + u.profile_pic + '" style="width:35px; height:35px; border-radius:50%; object-fit:cover; margin-right: 15px; display:inline-block; vertical-align:middle;">' : 
-            '<div style="width: 35px; height: 35px; border-radius: 50%; background: #f5c518; display:inline-flex; justify-content:center; align-items:center; font-weight:bold; color:black; margin-right:15px; vertical-align:middle;">' + (u.username || 'U')[0].toUpperCase() + '</div>';
-
-          var actionHtml = '';
-          if (isSuperadmin) {
-            actionHtml = '<span style="color:#f5c518; font-weight:bold; font-size:0.9rem;"><i class="bx bx-crown"></i> Superadmin</span>';
-          } else if (u.otp_code) {
-            actionHtml = '<button class="admin-logout-btn" data-id="' + u.id + '" style="background:#d32f2f; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; gap:5px; font-weight: bold; position: relative; z-index: 10;"><i class="bx bx-exit"></i> Scollega</button>';
-          } else {
-            actionHtml = '<span style="color:#e65100; font-size:0.8rem; font-weight:bold; background:rgba(230,81,0,0.1); padding:4px 8px; border-radius:4px;"><i class="bx bx-error-circle"></i> Disconnesso</span>';
-          }
-          
-          userCard.innerHTML = '<div style="display:flex; align-items:center; cursor:pointer; flex-grow:1;" class="user-detail-trigger" data-id="' + u.id + '" data-name="' + (u.username || 'Sconosciuto') + '">' +
-            profilePicHtml + 
-            '<div>' +
-            '<p style="margin:0; font-size:1.1rem; font-weight:bold; color:white; display:flex; align-items:center;">' + statusDot + (u.username || 'Sconosciuto') + '</p>' +
-            '<p style="margin:0; font-size:0.85rem; color:#aaa; margin-top:4px;">ID: ' + shortId + '</p>' +
-            '</div></div>' +
-            '<div>' + actionHtml + '</div>';
-          
-          var btn = userCard.querySelector('.admin-logout-btn');
-          if (btn) {
-            btn.addEventListener('click', function(e) {
-              e.stopPropagation();
-              if (!confirm('Vuoi davvero scollegare ' + (u.username || 'questo utente') + '?')) return;
-              
-              btn.innerText = 'Attendere...';
-              btn.disabled = true;
-              
-              fetch(API_BASE + '/admin/users/logout', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                  user_id: parsed.telegram_id || parsed.id,
-                  otp_code: parsed.otp_code,
-                  target_user_id: u.id
-                })
-              })
-              .then(function(r) { return r.json(); })
-              .then(function(d) {
-                if (d.success) {
-                  userCard.style.opacity = '0';
-                  userCard.style.transition = 'opacity 0.3s';
-                  setTimeout(function() { userCard.remove(); }, 300);
-                } else {
-                  alert('Errore: ' + (d.error || 'sconosciuto'));
-                  btn.innerText = 'Scollega';
-                  btn.disabled = false;
-                }
-              })
-              .catch(function() {
-                alert('Errore di rete');
-                btn.innerText = 'Scollega';
-                btn.disabled = false;
-              });
-            });
-          }
-          
-          container.appendChild(userCard);
-        });
-        
-        // Listener per aprire il modale dei log utente
-        document.querySelectorAll('.user-detail-trigger').forEach(function(el) {
-          el.addEventListener('click', async function() {
-            var targetId = this.getAttribute('data-id');
-            var targetName = this.getAttribute('data-name');
-            document.getElementById('modal-user-name').innerHTML = "<i class='bx bx-user' style='color:#f5c518;'></i> " + targetName;
-            document.getElementById('user-logs-modal').style.display = 'flex';
-            
-            document.getElementById('modal-watchlist').innerHTML = "Caricamento...";
-            document.getElementById('modal-watched').innerHTML = "Caricamento...";
-            document.getElementById('modal-vlclogs').innerHTML = "Caricamento...";
-            
-            try {
-              const res = await fetch(API_BASE + '/admin/user/logs', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                  user_id: parsed.telegram_id || parsed.id,
-                  otp_code: parsed.otp_code,
-                  target_user_id: targetId
-                })
-              });
-              const d = await res.json();
-              if(d.success) {
-                // Watchlist
-                if(d.watchlist && d.watchlist.length > 0) {
-                  document.getElementById('modal-watchlist').innerHTML = d.watchlist.map(i => "• " + i.title).join('<br>');
-                } else {
-                  document.getElementById('modal-watchlist').innerHTML = "Nessun elemento.";
-                }
-                // Watched
-                if(d.watched && d.watched.length > 0) {
-                  document.getElementById('modal-watched').innerHTML = d.watched.map(i => "• " + i.title + " (S" + i.season_number + " E" + i.episode_number + ")").join('<br>');
-                } else {
-                  document.getElementById('modal-watched').innerHTML = "Nessun elemento.";
-                }
-                // VLC Logs
-                if(d.vlc_requests && d.vlc_requests.length > 0) {
-                  document.getElementById('modal-vlclogs').innerHTML = d.vlc_requests.map(i => {
-                    let epInfo = (i.type === 'tv' && i.season && i.episode) ? " (S" + i.season + " E" + i.episode + ")" : "";
-                    let dStr = new Date(i.created_at).toLocaleString('it-IT');
-                    return "<div style='margin-bottom: 5px;'>• " + i.title + epInfo + " <br><small style='color:#888; padding-left: 10px;'>" + dStr + "</small></div>";
-                  }).join('');
-                } else {
-                  document.getElementById('modal-vlclogs').innerHTML = "Nessuna richiesta.";
-                }
-              } else {
-                document.getElementById('modal-watchlist').innerHTML = "Errore: " + (d.error || 'sconosciuto');
-                document.getElementById('modal-watched').innerHTML = "Errore: " + (d.error || 'sconosciuto');
-                document.getElementById('modal-vlclogs').innerHTML = "Errore: " + (d.error || 'sconosciuto');
-              }
-            } catch(e) {
-              document.getElementById('modal-watchlist').innerHTML = "Errore di rete.";
-              document.getElementById('modal-watched').innerHTML = "Errore di rete.";
-              document.getElementById('modal-vlclogs').innerHTML = "Errore di rete.";
-            }
-          });
+        usersList.forEach((u) => {
+          container.appendChild(buildUserCard(u, data));
         });
 
+        container.querySelectorAll('.admin-user').forEach((el) => {
+          el.addEventListener('click', () => showLogs(el.dataset.id, el.dataset.name));
+        });
       } catch (err) {
         console.error('Admin load error:', err);
-        document.getElementById('admin-users-list').innerHTML = '<p style="color:#ff4444;">Errore di connessione al server.</p>';
+        container.innerHTML = '<p class="state-msg error"><i class="bx bx-wifi-off"></i><strong>Errore di connessione</strong>Impossibile contattare il server.</p>';
       }
     }
-    
+
+    function renderStats(data, shownCount) {
+      const el = document.getElementById('admin-stats');
+      const total = data.total != null ? data.total : shownCount;
+      const vlc = data.vlc_requests_24h != null ? data.vlc_requests_24h : '—';
+      const active24 = data.users_24h != null ? data.users_24h : '—';
+
+      el.innerHTML =
+        '<span><i class="bx bx-group"></i> ' + total + ' utenti</span>' +
+        '<span><i class="bx bx-pulse"></i> ' + active24 + ' attivi (24h)</span>' +
+        '<span><i class="bx bx-play-circle"></i> ' + vlc + ' richieste VLC (24h)</span>';
+      el.hidden = false;
+    }
+
+    function buildUserCard(u, data) {
+      const online = isOnline(data, u.id);
+      const shortId = String(u.telegram_id || u.id || '').substring(0, 10);
+
+      const card = document.createElement('div');
+      card.className = 'admin-card';
+
+      const avatar = u.profile_pic
+        ? '<img class="admin-avatar" src="' + escapeHtml(u.profile_pic) + '" alt="">'
+        : '<div class="admin-avatar-fallback">' + escapeHtml((u.username || 'U')[0].toUpperCase()) + '</div>';
+
+      let actionHtml;
+      if (String(u.telegram_id) === SUPERADMIN_ID) {
+        actionHtml = '<span class="admin-crown"><i class="bx bx-crown"></i> Superadmin</span>';
+      } else if (u.otp_code) {
+        actionHtml = '<button class="admin-logout-btn" data-id="' + escapeHtml(u.id) + '"><i class="bx bx-exit"></i> Scollega</button>';
+      } else {
+        actionHtml = '<span class="admin-pill offline"><i class="bx bx-error-circle"></i> Disconnesso</span>';
+      }
+
+      card.innerHTML =
+        '<div class="admin-user" data-id="' + escapeHtml(u.id) + '" data-name="' + escapeHtml(u.username || 'Sconosciuto') + '">' +
+          avatar +
+          '<div class="admin-user-text">' +
+            '<p class="admin-name"><span class="admin-status-dot ' + (online ? 'online' : 'offline') + '" title="' + (online ? 'Online' : 'Offline') + '"></span>' + escapeHtml(u.username || 'Sconosciuto') + '</p>' +
+            '<p class="admin-id">ID: ' + escapeHtml(shortId) + '</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-action">' + actionHtml + '</div>';
+
+      const btn = card.querySelector('.admin-logout-btn');
+      if (btn) {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+
+          const ok = await window.uiConfirm(
+            'Scollegare l\'utente?',
+            'Vuoi davvero scollegare ' + (u.username || 'questo utente') + '? Dovrà richiedere un nuovo codice.',
+            { okLabel: 'Scollega', danger: true }
+          );
+          if (!ok) return;
+
+          btn.disabled = true;
+          btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Attendere...';
+
+          try {
+            const r = await fetch(`${API_BASE}/admin/users/logout`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ user_id: myId, otp_code: parsed.otp_code, target_user_id: u.id })
+            });
+            const d = await r.json();
+
+            if (d.success) {
+              card.classList.add('is-removing');
+              setTimeout(() => card.remove(), 300);
+              window.showToast((u.username || 'Utente') + ' scollegato.', 'success');
+            } else {
+              window.showToast('Errore: ' + (d.error || 'sconosciuto'), 'error');
+              btn.disabled = false;
+              btn.innerHTML = '<i class="bx bx-exit"></i> Scollega';
+            }
+          } catch (err) {
+            window.showToast('Errore di rete', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bx bx-exit"></i> Scollega';
+          }
+        });
+      }
+
+      return card;
+    }
+
+    async function showLogs(targetId, targetName) {
+      document.getElementById('modal-user-name').innerHTML =
+        '<i class="bx bx-user"></i> ' + escapeHtml(targetName);
+      openModal();
+
+      const watchlistEl = document.getElementById('modal-watchlist');
+      const watchedEl = document.getElementById('modal-watched');
+      const vlcEl = document.getElementById('modal-vlclogs');
+      watchlistEl.textContent = 'Caricamento...';
+      watchedEl.textContent = 'Caricamento...';
+      vlcEl.textContent = 'Caricamento...';
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/user/logs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: myId, otp_code: parsed.otp_code, target_user_id: targetId })
+        });
+        const d = await res.json();
+
+        if (!d.success) {
+          const msg = 'Errore: ' + escapeHtml(d.error || 'sconosciuto');
+          watchlistEl.textContent = msg;
+          watchedEl.textContent = msg;
+          vlcEl.textContent = msg;
+          return;
+        }
+
+        watchlistEl.innerHTML = (d.watchlist && d.watchlist.length)
+          ? d.watchlist.map((i) => '• ' + escapeHtml(i.title)).join('<br>')
+          : 'Nessun elemento.';
+
+        watchedEl.innerHTML = (d.watched && d.watched.length)
+          ? d.watched.map((i) => '• ' + escapeHtml(i.title) + ' (S' + escapeHtml(i.season_number) + ' E' + escapeHtml(i.episode_number) + ')').join('<br>')
+          : 'Nessun elemento.';
+
+        vlcEl.innerHTML = (d.vlc_requests && d.vlc_requests.length)
+          ? d.vlc_requests.map((i) => {
+              const epInfo = (i.type === 'tv' && i.season && i.episode)
+                ? ' (S' + escapeHtml(i.season) + ' E' + escapeHtml(i.episode) + ')'
+                : '';
+              const when = new Date(i.created_at).toLocaleString('it-IT');
+              return '<div>• ' + escapeHtml(i.title) + epInfo +
+                     '<small class="log-time">' + escapeHtml(when) + '</small></div>';
+            }).join('')
+          : 'Nessuna richiesta.';
+      } catch (err) {
+        watchlistEl.textContent = 'Errore di rete.';
+        watchedEl.textContent = 'Errore di rete.';
+        vlcEl.textContent = 'Errore di rete.';
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', loadUsers);
   </script>
 </body>
