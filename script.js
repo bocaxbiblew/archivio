@@ -46,9 +46,15 @@ if (currentUser && !window.location.pathname.includes('login.html')) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-
-
-
+  // --- GLOBAL IMAGE ERROR HANDLER ---
+  document.addEventListener('error', function(e) {
+    if (e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
+      if (!e.target.dataset.errorHandled) {
+        e.target.dataset.errorHandled = true;
+        e.target.src = 'https://placehold.co/200x300/1a1a1a/fff?text=No+Image';
+      }
+    }
+  }, true);
   // --- UI/UX & Navbar Scroll ---
   window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
@@ -2073,15 +2079,15 @@ document.addEventListener('DOMContentLoaded', () => {
       position: absolute;
       right: 20px;
       top: 70px;
-      background: rgba(15, 15, 15, 0.65);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
+      background: rgba(15, 15, 20, 0.7);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
       padding: 10px;
       z-index: 1000;
       width: 220px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.6), 0 0 10px rgba(255,255,255,0.05);
     `;
     dropdown.innerHTML = `
       <div style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; display:flex; align-items:center; gap: 10px;">

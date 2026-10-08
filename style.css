@@ -183,20 +183,26 @@ body {
   overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Apple Style */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f0f0f;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: rgba(255, 255, 255, 0.4);
+}
+body.light-mode ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+body.light-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
 }
 
 /* NAVBAR */
@@ -346,8 +352,9 @@ body {
   margin-bottom: 1.5rem;
 }
 .hero-title-text {
-  font-size: 3rem;
+  font-size: 3.2rem;
   font-weight: 800;
+  letter-spacing: -1.5px;
   margin-bottom: 1rem;
   line-height: 1.1;
 }
@@ -487,8 +494,9 @@ body {
   z-index: 2;
 }
 .section-title {
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   margin-bottom: 1.2rem;
 }
 .carousel-container {
@@ -984,12 +992,13 @@ body {
 /* --- ANIMATIONS & SKELETON LOADING --- */
 .fade-section {
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  transform: translateY(25px) scale(0.98);
+  transition: opacity 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.1), transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  will-change: opacity, transform;
 }
 .fade-section.visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .skeleton-card {
@@ -1075,16 +1084,17 @@ body {
 .search-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: env(safe-area-inset-bottom, 0);
-    transform: translateZ(0);
-  background: rgba(3, 3, 15, 0.95);
+  transform: translateZ(0);
+  background: rgba(15, 15, 20, 0.65);
   z-index: 2000;
   display: flex;
   flex-direction: column;
   padding: 5rem 3rem;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--transition);
-  backdrop-filter: blur(10px);
+  transition: opacity 0.4s ease;
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
 }
 .search-overlay.active {
   opacity: 1;
@@ -1093,20 +1103,29 @@ body {
 .close-search {
   position: absolute;
   top: 2rem; right: 3rem;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  width: 44px; height: 44px;
+  display: flex; justify-content: center; align-items: center;
   color: white;
-  font-size: 2.5rem;
+  font-size: 2rem;
   cursor: pointer;
-  transition: transform var(--transition);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .close-search:hover {
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(90deg);
+  background: rgba(255, 255, 255, 0.2);
 }
 .search-container {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  transform: translateY(-20px) scale(0.95);
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+.search-overlay.active .search-container {
+  transform: translateY(0) scale(1);
 }
 .icon-btn {
   background: transparent;
@@ -1448,9 +1467,10 @@ body {
 }
 .poster-title {
   color: #fff;
-  font-weight: 700;
-  font-size: 0.9rem;
-  line-height: 1.2;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.2px;
+  line-height: 1.25;
   text-overflow: ellipsis;
   overflow: hidden;
   display: -webkit-box;
