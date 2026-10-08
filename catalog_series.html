@@ -17,23 +17,34 @@
 <body>
 
   <!-- Navbar -->
-  <nav class="navbar">
-    <div class="nav-left">
-      <img src="assets/unnamed.png" alt="Logo" class="logo" style="height: 40px; border-radius: 8px; cursor:pointer;" onclick="window.location.href='index.html'">
+  <!-- Floating Sidebar (Desktop) -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <img src="assets/unnamed.png" alt="Logo" class="sidebar-logo" onclick="window.location.href='index.html'">
     </div>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="catalog_series.html" class="active">Serie</a></li>
-      <li><a href="catalog_movies.html">Film</a></li>
-      <li><a href="calendar.html">Uscite</a></li>
+    <ul class="sidebar-links">
+      <li><a href="index.html"><i class='bx bx-home-alt-2'></i> <span>Home</span></a></li>
+      <li><a href="catalog_series.html" class="active"><i class='bx bx-tv'></i> <span>Serie</span></a></li>
+      <li><a href="catalog_movies.html"><i class='bx bx-movie-play'></i> <span>Film</span></a></li>
+      <li><a href="calendar.html"><i class='bx bx-calendar-star'></i> <span>Uscite</span></a></li>
     </ul>
-    <div class="nav-right">
-      <a href="https://t.me/+w-cVyPMl7B5lOGY0" target="_blank" class="icon-btn" title="Canale Telegram" style="color: inherit; text-decoration: none; display: flex; align-items: center; justify-content: center;"><i class='bx bx-bulb'></i></a>
-      <button class="icon-btn"><i class='bx bx-search'></i></button>
-      <button class="icon-btn"><i class='bx bx-bookmark'></i></button>
+    <div class="sidebar-bottom">
+      <button class="icon-btn" id="open-search"><i class='bx bx-search'></i></button>
       <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar">
     </div>
-  </nav>
+  </aside>
+
+  <!-- Mobile Header (Hidden on Desktop) -->
+  <header class="mobile-header">
+    <img src="assets/unnamed.png" alt="Logo" class="mobile-logo" onclick="window.location.href='index.html'">
+    <div class="mobile-header-right">
+      <button class="icon-btn" id="open-search-mobile"><i class='bx bx-search'></i></button>
+      <img src="https://placehold.co/100x100/ffcc00/000?text=User" alt="Profile" class="profile-avatar mobile-avatar">
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-content">
 
   <!-- Mobile Tab Bar (iOS style) -->
   <div class="mobile-tab-bar">
@@ -77,5 +88,11 @@
       });
     }
   </script>
+  <!-- Cinematic Modal -->
+  <div class="cinematic-modal" id="cinematic-modal">
+    <button class="close-modal" id="close-modal"><i class='bx bx-x'></i></button>
+    <iframe id="modal-iframe" src="" frameborder="0"></iframe>
+  </div>
+  </main>
 </body>
 </html>

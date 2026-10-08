@@ -11,12 +11,16 @@
 <body>
 
   <!-- Navbar -->
-  <nav class="navbar" style="position: relative;">
-    <div class="nav-left">
-      <a href="javascript:history.back()" class="icon-btn" style="color:white; font-size:1.5rem; text-decoration:none;"><i class='bx bx-chevron-left'></i></a>
-      <h2 style="color:white; margin-left: 15px;"><i class='bx bx-crown' style="color:#f5c518; margin-right: 8px;"></i>Pannello Admin</h2>
+  <!-- Floating Sidebar (Desktop) -->
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <img src="assets/unnamed.png" alt="Logo" class="sidebar-logo" onclick="window.location.href='index.html'">
     </div>
-  </nav>
+    <ul class="sidebar-links">
+      <li><a href="index.html"><i class='bx bx-home-alt-2'></i> <span>Home</span></a></li>
+    </ul>
+  </aside>
+  <main class="main-content">
 
   <div style="padding: 2rem; max-width: 800px; margin: 0 auto;">
     <p style="color: #aaa; margin-bottom: 2rem;">Gestione degli utenti collegati alla piattaforma.</p>
@@ -236,5 +240,6 @@
     
     document.addEventListener('DOMContentLoaded', loadUsers);
   </script>
+  </main>
 </body>
 </html>
