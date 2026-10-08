@@ -1,6 +1,6 @@
 // API Backend sempre sulla VPS
 const API_BASE = 'https://api-archivio.duckdns.org/api';
-
+const safeSetItem = (key, value) => { try { safeSetItem(key, value); } catch(e) { console.warn("localStorage quota exceeded"); } };const escapeHTML = str => { if (!str) return ""; return String(str).replace(/[&<>"']/g, m => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"})[m]); };
 // --- AUTH CHECK ---
 const authData = localStorage.getItem('user_auth');
 if (!authData && !window.location.pathname.includes('login.html')) {
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
     if (navbar) {
-      if (window.scrollY > 50) {
+      if ((window.scrollY || window.pageYOffset) > 50) {
         navbar.classList.add('scrolled');
       } else {
         navbar.classList.remove('scrolled');
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const detailNav = document.querySelector('.detail-top-nav');
     if (detailNav) {
-      if (window.scrollY > 50) {
+      if ((window.scrollY || window.pageYOffset) > 50) {
         detailNav.classList.add('scrolled');
       } else {
         detailNav.classList.remove('scrolled');
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Task 3: Opacizzazione su scroll per le pagine di dettaglio (series.html, movie.html)
     const heroOverlay = document.getElementById('hero-fade-overlay');
     if (heroOverlay) {
-      const scrollY = window.scrollY;
+      const scrollY = (window.scrollY || window.pageYOffset);
       const maxScroll = 400; // Il punto in cui l'opacità diventa 1 (tutto nero)
       let opacity = scrollY / maxScroll;
       if (opacity > 1) opacity = 1;
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSearchBtn = document.getElementById('close-search');
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
-
+    if (searchResults && searchInput) searchResults.addEventListener('touchmove', () => searchInput.blur(), {passive: true});
     let localCatalog = [];
 
     if (searchBtn) {
@@ -592,9 +592,9 @@ document.addEventListener('DOMContentLoaded', () => {
           card.href = link;
           card.className = 'card card-poster catalog-poster';
           card.innerHTML = `
-            <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+            <img src="${imgUrl}" alt="${escapeHTML(titleText)}" loading="lazy">
             <div class="poster-overlay">
-              <div class="poster-title">${titleText}</div>
+              <div class="poster-title">${escapeHTML(titleText)}</div>
               <div class="poster-meta">
                 <span>${releaseYear}</span>
                 <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
@@ -1034,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const cacheStr = JSON.stringify({ timestamp: Date.now(), catalogCount, data: homeData });
       console.log(`[HomeCache] Saving cache: ${(cacheStr.length / 1024).toFixed(1)} KB, catalogCount: ${catalogCount}`);
-      localStorage.setItem(CACHE_KEY, cacheStr);
+      safeSetItem(CACHE_KEY, cacheStr);
       console.log('[HomeCache] Cache saved successfully');
     } catch(e) { console.error('[HomeCache] FAILED to save cache:', e); }
 
@@ -1110,7 +1110,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    let autoSlideInterval = setInterval(() => {
+    if (window.heroAutoSlideInterval) clearInterval(window.heroAutoSlideInterval);
+    window.heroAutoSlideInterval = setInterval(() => {
       const nextIndex = (currentIndex + 1) % slides.length;
       goToSlide(nextIndex);
     }, 5000);
@@ -1154,6 +1155,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Animazione di slide "seguendo il mouse"
     const sliderContainer = document.querySelector('.hero-slider-container');
     if (sliderContainer) {
+      let touchStartX = 0;
+      sliderContainer.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, {passive: true});
+      sliderContainer.addEventListener('touchend', e => {
+        let touchEndX = e.changedTouches[0].screenX;
+        if (touchStartX - touchEndX > 50) { let next = (currentIndex + 1) % slides.length; goToSlide(next); clearInterval(window.heroAutoSlideInterval); }
+        if (touchEndX - touchStartX > 50) { let prev = (currentIndex - 1 + slides.length) % slides.length; goToSlide(prev); clearInterval(window.heroAutoSlideInterval); }
+      }, {passive: true});
       sliderContainer.addEventListener('mousemove', (e) => {
         const rect = sliderContainer.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -1164,8 +1172,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (hoverIndex !== currentIndex) {
           goToSlide(hoverIndex);
-          clearInterval(autoSlideInterval);
-          autoSlideInterval = setInterval(() => {
+          clearInterval(window.heroAutoSlideInterval);
+          window.heroAutoSlideInterval = setInterval(() => {
             const nextIndex = (currentIndex + 1) % slides.length;
             goToSlide(nextIndex);
           }, 5000);
@@ -1280,9 +1288,9 @@ document.addEventListener('DOMContentLoaded', () => {
         card.href = link;
         card.className = 'card card-poster catalog-poster';
         card.innerHTML = `
-          <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+          <img src="${imgUrl}" alt="${escapeHTML(titleText)}" loading="lazy">
           <div class="poster-overlay">
-            <div class="poster-title">${titleText}</div>
+            <div class="poster-title">${escapeHTML(titleText)}</div>
             <div class="poster-meta">
               <span>${releaseYear}</span>
               <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
@@ -1345,9 +1353,9 @@ document.addEventListener('DOMContentLoaded', () => {
           card.href = link;
           card.className = 'card card-poster catalog-poster';
           card.innerHTML = `
-            <img src="${imgUrl}" alt="${titleText}" loading="lazy">
+            <img src="${imgUrl}" alt="${escapeHTML(titleText)}" loading="lazy">
             <div class="poster-overlay">
-              <div class="poster-title">${titleText}</div>
+              <div class="poster-title">${escapeHTML(titleText)}</div>
               <div class="poster-meta">
                 <span>${releaseYear}</span>
                 <span><i class='bx bxs-star' style="color: #f5c518;"></i> ${rating}</span>
@@ -1603,7 +1611,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.body.removeChild(tempInput);
                   }
                   showToast("✅ Link copiato! Incollalo su VLC per riprodurlo.");
-                } catch(e) {
+                  window.location.href = linkToCopy;                } catch(e) {
                   showToast("❌ Errore durante la copia.");
                 }
 
@@ -1717,7 +1725,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (epViewToggle) {
         epViewToggle.addEventListener('click', () => {
           isVerticalView = !isVerticalView;
-          localStorage.setItem('ep_view_mode', isVerticalView ? 'vertical' : 'horizontal');
+          safeSetItem('ep_view_mode', isVerticalView ? 'vertical' : 'horizontal');
           applyViewMode();
         });
       }
@@ -1908,7 +1916,7 @@ document.addEventListener('DOMContentLoaded', () => {
               document.body.removeChild(tempInput);
             }
             showToast("✅ Link copiato! Incollalo su VLC per riprodurlo.");
-          } catch(e) {
+                  window.location.href = linkToCopy;          } catch(e) {
             showToast("❌ Errore durante la copia.");
           }
 
@@ -2092,14 +2100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdown.innerHTML = `
       <div style="padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px; display:flex; align-items:center; gap: 10px;">
         ${currentUser.profile_pic ? 
-          `<img src="${currentUser.profile_pic}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">` : 
+          `<img src="${escapeHTML(currentUser.profile_pic)}" style="width:35px; height:35px; border-radius:50%; object-fit:cover;">` : 
           `<div style="width: 35px; height: 35px; border-radius: 50%; background: #ffcc00; display:flex; justify-content:center; align-items:center; font-weight:bold; color:black;">
              ${(currentUser.username || 'U')[0].toUpperCase()}
            </div>`
         }
         <div style="flex-grow:1;">
           <div style="display: flex; align-items: center; gap: 5px;">
-            <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${currentUser.username || ''}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
+            <input type="text" id="profile-name-input" placeholder="Il tuo Nome" value="${escapeHTML(currentUser.username || '')}" style="width:100%; padding:4px 0; background:transparent; color:white; border:none; outline:none; font-weight:bold; font-size: 1rem;">
             <i class='bx bx-pencil' style="color: #aaa; font-size: 0.9rem;"></i>
           </div>
           <p style="margin:0; font-size:0.7rem; color:#aaa;">ID: ${currentUser.telegram_id || 'Sconosciuto'}</p>
@@ -2147,7 +2155,7 @@ document.addEventListener('DOMContentLoaded', () => {
       avatar.addEventListener('click', (e) => {
         e.stopPropagation();
         const rect = avatar.getBoundingClientRect();
-        dropdown.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+        dropdown.style.top = (rect.bottom + (window.scrollY || window.pageYOffset) + 10) + 'px';
         dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
       });
     });
@@ -2176,7 +2184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saveProfileBtn.style.background = '#4CAF50';
             saveProfileBtn.style.color = 'white';
             currentUser.username = dName;
-            localStorage.setItem('user_auth', JSON.stringify(currentUser));
+            safeSetItem('user_auth', JSON.stringify(currentUser));
             setTimeout(() => {
               saveProfileBtn.innerText = 'Salva Profilo';
               saveProfileBtn.style.background = 'white';
@@ -2229,7 +2237,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = await res.json();
           if (data.success) {
             currentUser.profile_pic = base64;
-            localStorage.setItem('user_auth', JSON.stringify(currentUser));
+            safeSetItem('user_auth', JSON.stringify(currentUser));
             avatars.forEach(a => a.src = base64);
             window.showToast('Immagine aggiornata con successo!');
           } else {
@@ -2493,7 +2501,7 @@ document.addEventListener('DOMContentLoaded', () => {
            const saveData = await saveRes.json();
            if (saveData.success) {
               // Save styles to localStorage
-              localStorage.setItem(`backdrop_styles_${tmdbId}`, JSON.stringify(stylesToSave));
+              safeSetItem(`backdrop_styles_${tmdbId}`, JSON.stringify(stylesToSave));
               localStorage.removeItem('homePageCache_v5');
               window.showToast("Immagine e inquadratura salvate!");
               document.body.removeChild(editorOverlay);
@@ -2648,7 +2656,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const TRIGGER_THRESHOLD = 150; // px of raw drag needed to trigger refresh
 
     document.body.addEventListener('touchstart', (e) => {
-      if (window.scrollY <= 5) {
+      // Ignora il pull to refresh se l'utente sta toccando un carosello
+      if (e.target.closest('.carousel-container') || e.target.closest('.hero-slider-container')) return;
+      
+      if (((window.scrollY || window.pageYOffset) || window.pageYOffset) <= 5) {
         startY = e.touches[0].clientY;
         isPulling = true;
       }
@@ -2658,7 +2669,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isPulling) return;
       const currentY = e.touches[0].clientY;
       const rawDelta = currentY - startY;
-      if (rawDelta > 0 && window.scrollY <= 5) {
+      if (rawDelta > 0 && (window.scrollY || window.pageYOffset) <= 5) {
         const resistedDelta = rawDelta * RESISTANCE;
         if (rawDelta > SHOW_THRESHOLD) {
           pTrContainer.style.top = '0px';
@@ -2672,7 +2683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('touchend', (e) => {
       if (isPulling) {
         const endY = e.changedTouches[0].clientY;
-        if (endY - startY > TRIGGER_THRESHOLD && window.scrollY <= 5) {
+        if (endY - startY > TRIGGER_THRESHOLD && (window.scrollY || window.pageYOffset) <= 5) {
           pTrContainer.innerHTML = '<i class="bx bx-loader-alt bx-spin" style="font-size:2rem; color:var(--primary-color);"></i><span style="margin-left:10px; color:white;">Aggiornamento...</span>';
           setTimeout(() => location.reload(), 500);
         } else {
