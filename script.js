@@ -1,6 +1,6 @@
 // API Backend sempre sulla VPS
 const API_BASE = 'https://api-archivio.duckdns.org/api';
-const safeSetItem = (key, value) => { try { safeSetItem(key, value); } catch(e) { console.warn("localStorage quota exceeded"); } };const escapeHTML = str => { if (!str) return ""; return String(str).replace(/[&<>"']/g, m => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"})[m]); };
+const safeSetItem = (key, value) => { try { localStorage.setItem(key, value); } catch(e) { console.warn("localStorage quota exceeded"); } };const escapeHTML = str => { if (!str) return ""; return String(str).replace(/[&<>"']/g, m => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"})[m]); };
 // --- AUTH CHECK ---
 const authData = localStorage.getItem('user_auth');
 if (!authData && !window.location.pathname.includes('login.html')) {
@@ -54,8 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (cinematicModal && modalIframe && closeModalBtn) {
     document.addEventListener('click', e => {
-      const card = e.target.closest('a.card') || e.target.closest('a.episode-card') || (e.target.closest('a') && e.target.closest('a').href.match(/(movie|series)\.html/));
-      if (card && (card.href.includes('movie.html') || card.href.includes('series.html'))) {
+      // Only intercept card clicks, not sidebar/tab navigation
+      const card = e.target.closest('a.card') || e.target.closest('a.episode-card');
+      if (card && card.href && (card.href.includes('movie.html') || card.href.includes('series.html'))) {
         e.preventDefault();
         modalIframe.src = card.href;
         cinematicModal.classList.add('active');
@@ -66,6 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
       cinematicModal.classList.remove('active');
       modalIframe.src = '';
       document.body.style.overflow = '';
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && cinematicModal.classList.contains('active')) {
+        cinematicModal.classList.remove('active');
+        modalIframe.src = '';
+        document.body.style.overflow = '';
+      }
     });
   }
   
@@ -144,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }, observerOptions);
-    const searchBtns = document.querySelectorAll("#open-search, #open-search-mobile");
 
+  document.querySelectorAll('.section').forEach(section => {
     section.classList.add('fade-section');
     sectionObserver.observe(section);
   });
@@ -2101,28 +2109,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatars = document.querySelectorAll('.profile-avatar');
     if (!avatars.length || !currentUser) return;
 
-    avatars.forEach(avatar => {
-      if (currentUser.profile_pic) {
-         avatar.src = currentUser.profile_pic;
-      }
-      avatar.style.cursor = 'pointer';
-      avatar.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const rect = avatar.getBoundingClientRect();
-        if (window.innerWidth <= 768) {
-          dropdown.style.top = (rect.bottom + 10) + 'px';
-          dropdown.style.right = '20px';
-          dropdown.style.left = 'auto';
-          dropdown.style.bottom = 'auto';
-        } else {
-          dropdown.style.bottom = (window.innerHeight - rect.top) + 'px';
-          dropdown.style.left = (rect.right + 20) + 'px';
-          dropdown.style.top = 'auto';
-          dropdown.style.right = 'auto';
-        }
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-      });
-    });
     const dropdown = document.createElement('div');
     dropdown.id = 'user-dropdown-menu';
     dropdown.style.cssText = `
@@ -2179,6 +2165,30 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
     document.body.appendChild(dropdown);
+
+    // Set up avatar click handlers (dropdown must exist first)
+    avatars.forEach(avatar => {
+      if (currentUser.profile_pic) {
+         avatar.src = currentUser.profile_pic;
+      }
+      avatar.style.cursor = 'pointer';
+      avatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rect = avatar.getBoundingClientRect();
+        if (window.innerWidth <= 768) {
+          dropdown.style.top = (rect.bottom + 10) + 'px';
+          dropdown.style.right = '20px';
+          dropdown.style.left = 'auto';
+          dropdown.style.bottom = 'auto';
+        } else {
+          dropdown.style.bottom = (window.innerHeight - rect.top) + 'px';
+          dropdown.style.left = (rect.right + 20) + 'px';
+          dropdown.style.top = 'auto';
+          dropdown.style.right = 'auto';
+        }
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      });
+    });
 
     // Fetch stats
     fetch(`${API_BASE}/user/stats`, {

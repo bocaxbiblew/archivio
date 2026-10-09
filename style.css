@@ -1550,23 +1550,24 @@ body.light-mode ::-webkit-scrollbar-thumb:hover {
    V2 SPATIAL & BENTO REDESIGN
    ========================================= */
 
-body {
-  display: flex;
+/* --- HIDE OLD NAVBAR --- */
+.navbar { display: none !important; }
+
+/* --- LAYOUT STRUCTURE --- */
+/* Sidebar pages use margin-left; non-sidebar pages unaffected */
+.main-content {
+  margin-left: 100px; 
+  width: calc(100% - 100px);
+  position: relative;
   min-height: 100vh;
 }
 
-.main-content {
-  flex-grow: 1;
-  padding-left: 80px; 
-  width: 100%;
-  position: relative;
-  transition: padding-left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-  background: transparent;
+/* --- Fix top padding since navbar is hidden --- */
+.catalog-header {
+  margin-top: 40px !important;
 }
-
-#home-page .main-content {
-  background: linear-gradient(180deg, transparent 0%, transparent 50vh, var(--bg-color) 75vh, var(--bg-color) 100%);
-  z-index: 1;
+.series-hero {
+  padding-top: 40px !important;
 }
 
 /* --- SIDEBAR (FLOATING GLASS) --- */
@@ -1616,6 +1617,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 0;
+  margin: 0;
 }
 
 .sidebar-links li a {
@@ -1670,7 +1673,7 @@ body {
   justify-content: space-between;
 }
 
-.profile-avatar {
+.sidebar .profile-avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -1679,7 +1682,7 @@ body {
   cursor: pointer;
   transition: transform 0.2s;
 }
-.profile-avatar:hover {
+.sidebar .profile-avatar:hover {
   transform: scale(1.1);
   border-color: #ffcc00;
 }
@@ -1689,7 +1692,7 @@ body {
   display: none;
   position: fixed;
   top: 0; left: 0; right: 0;
-  padding: 1rem;
+  padding: 1rem 1.2rem;
   background: linear-gradient(180deg, rgba(3,3,15,0.9) 0%, rgba(3,3,15,0) 100%);
   z-index: 1000;
   justify-content: space-between;
@@ -1699,6 +1702,7 @@ body {
 .mobile-logo {
   height: 35px;
   border-radius: 8px;
+  cursor: pointer;
 }
 
 .mobile-header-right {
@@ -1711,8 +1715,8 @@ body {
   width: 36px; height: 36px;
 }
 
-/* --- FULL BLEED HERO --- */
-.hero-slider-container {
+/* --- FULL BLEED HERO (Home only) --- */
+#home-page .hero-slider-container {
   position: fixed !important;
   top: 0; left: 0; right: 0;
   width: 100% !important;
@@ -1721,13 +1725,17 @@ body {
   z-index: 0 !important;
 }
 
-.hero-slide {
-  padding: 0 3rem 35vh 120px !important;
+#home-page .hero-slide {
+  padding: 0 3rem 30vh 120px !important;
 }
 
-.hero-slide::before {
-  top: 0 !important;
-  bottom: 0 !important;
+/* The sections-wrapper creates the "scrolling over hero" effect */
+.sections-wrapper {
+  position: relative;
+  z-index: 2;
+  margin-top: 65vh;
+  background: linear-gradient(180deg, transparent 0%, var(--bg-color) 150px);
+  padding-top: 40px;
 }
 
 /* --- BENTO GRID (In evidenza) --- */
@@ -1736,59 +1744,57 @@ body {
   grid-template-columns: 2fr 1fr 1fr !important;
   grid-auto-rows: 300px !important;
   gap: 20px !important;
-  padding: 0 4rem !important;
+  padding: 0 2rem !important;
   overflow: visible !important; 
 }
 
 #evidenza-carousel .card {
   width: 100% !important;
-  aspect-ratio: auto !important;
   height: 100% !important;
 }
 
 #evidenza-carousel .card:first-child {
   grid-column: 1 / 2;
-  aspect-ratio: 16/9 !important;
 }
 #evidenza-carousel .card:first-child img {
   border-radius: 20px;
-}
-#evidenza-carousel .card:nth-child(2), #evidenza-carousel .card:nth-child(3) {
-  aspect-ratio: 2/3 !important;
 }
 #evidenza-carousel .card:nth-child(4) { grid-column: 1 / 2; }
 #evidenza-carousel .card:nth-child(5) { grid-column: 2 / 4; }
 #evidenza-carousel .card:nth-child(n+6) { display: none !important; }
 
-/* RESPONSIVE */
+/* --- RESPONSIVE --- */
 @media (max-width: 768px) {
   .sidebar {
     display: none !important;
   }
   .main-content {
-    padding-left: 0 !important;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
   .mobile-header {
     display: flex !important;
   }
-  .hero-slide {
-    padding: 0 1rem 35vh 1rem !important;
+  #home-page .hero-slide {
+    padding: 0 1rem 30vh 1rem !important;
   }
+  .catalog-header {
+    margin-top: 70px !important;
+  }
+  /* On mobile, evidenza becomes a normal carousel */
   #evidenza-carousel {
-    grid-template-columns: 1fr 1fr !important;
-    grid-auto-rows: auto !important;
-    padding: 1rem !important;
-    gap: 15px !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    padding: 0 1rem !important;
+    gap: 12px !important;
   }
   #evidenza-carousel .card {
+    min-width: 140px !important;
     height: auto !important;
+    display: block !important;
   }
-  #evidenza-carousel .card:first-child {
-    grid-column: 1 / -1; 
-    height: 220px !important;
-  }
-  #evidenza-carousel .card:nth-child(4), #evidenza-carousel .card:nth-child(5) {
-    grid-column: span 1;
+  #evidenza-carousel .card:nth-child(n+6) {
+    display: block !important;
   }
 }
 
@@ -1844,15 +1850,20 @@ body {
   background: rgba(255,255,255,0.2);
   transform: scale(1.1) rotate(90deg);
 }
+
+/* When loaded inside cinematic modal iframe */
 body.in-iframe .detail-top-nav,
 body.in-iframe .mobile-tab-bar,
 body.in-iframe .sidebar,
-body.in-iframe .mobile-header,
-body.in-iframe .section-title {
+body.in-iframe .mobile-header {
   display: none !important;
 }
 body.in-iframe {
-  background: transparent !important;
+  background: var(--bg-color) !important;
+}
+body.in-iframe .main-content {
+  margin-left: 0 !important;
+  width: 100% !important;
 }
 
 @media (max-width: 768px) {
@@ -1866,9 +1877,4 @@ body.in-iframe {
     right: 20px;
     background: rgba(0,0,0,0.5);
   }
-}
-.navbar { display: none !important; }
-#home-page .main-content {
-  background: linear-gradient(180deg, transparent 0%, transparent 50vh, var(--bg-color) 75vh, var(--bg-color) 100%);
-  z-index: 1;
 }
