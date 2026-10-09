@@ -46,7 +46,7 @@ if (currentUser && !window.location.pathname.includes('login.html')) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  
+
   // --- CINEMATIC MODAL LOGIC ---
   const cinematicModal = document.getElementById('cinematic-modal');
   const modalIframe = document.getElementById('modal-iframe');
@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (cinematicModal && modalIframe && closeModalBtn) {
     document.addEventListener('click', e => {
-      // Only intercept card clicks, not sidebar/tab navigation
       const card = e.target.closest('a.card') || e.target.closest('a.episode-card');
       if (card && card.href && (card.href.includes('movie.html') || card.href.includes('series.html'))) {
         e.preventDefault();
@@ -80,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.self !== window.top) {
     document.body.classList.add('in-iframe');
   }
-
   // --- GLOBAL IMAGE ERROR HANDLER ---
   document.addEventListener('error', function(e) {
     if (e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
@@ -180,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const searchBtns = document.querySelectorAll("#open-search, #open-search-mobile");
-
     const closeSearchBtn = document.getElementById('close-search');
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
@@ -188,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let localCatalog = [];
 
     if (searchBtns.length > 0) {
-      searchBtns.forEach(btn => btn.addEventListener('click', async () => {
+      searchBtns.forEach(btn => btn.addEventListener("click", async () => {
         searchOverlay.classList.add('active');
         searchInput.focus();
         try {
@@ -270,13 +267,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(overlay);
 
     // Trova il pulsante bookmark nella navbar
-    const bookmarkIcon = document.querySelector('.bx-bookmark');
-    const bookmarkBtn = bookmarkIcon ? bookmarkIcon.closest('button') : null;
+    const bookmarkIcons = document.querySelectorAll('.bx-bookmark');
+    const bookmarkBtns = Array.from(bookmarkIcons).map(i => i.closest('button')).filter(Boolean);
     const closeBtn = document.getElementById('close-bookmark');
     const resultsContainer = document.getElementById('bookmark-results');
 
-    if (bookmarkBtn) {
-      bookmarkBtn.addEventListener('click', async () => {
+    if (bookmarkBtns.length > 0) {
+      bookmarkBtns.forEach(btn => btn.addEventListener('click', async () => {
         overlay.classList.add('active');
         resultsContainer.innerHTML = '<p style="color:#aaa; text-align:center; width:100%;">Caricamento...</p>';
         
@@ -336,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsContainer.appendChild(card);
           }
         });
-      });
+      }));
     }
 
     if (closeBtn) {
@@ -2109,13 +2106,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const avatars = document.querySelectorAll('.profile-avatar');
     if (!avatars.length || !currentUser) return;
 
+    avatars.forEach(avatar => {
+      if (currentUser.profile_pic) {
+         avatar.src = currentUser.profile_pic;
+      }
+    });
+
     const dropdown = document.createElement('div');
     dropdown.id = 'user-dropdown-menu';
     dropdown.style.cssText = `
       display: none;
-      position: fixed; z-index: 10001;
-      
-      
+      position: fixed;
       background: rgba(15, 15, 20, 0.7);
       backdrop-filter: blur(30px);
       -webkit-backdrop-filter: blur(30px);
@@ -2166,30 +2167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.appendChild(dropdown);
 
-    // Set up avatar click handlers (dropdown must exist first)
-    avatars.forEach(avatar => {
-      if (currentUser.profile_pic) {
-         avatar.src = currentUser.profile_pic;
-      }
-      avatar.style.cursor = 'pointer';
-      avatar.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const rect = avatar.getBoundingClientRect();
-        if (window.innerWidth <= 768) {
-          dropdown.style.top = (rect.bottom + 10) + 'px';
-          dropdown.style.right = '20px';
-          dropdown.style.left = 'auto';
-          dropdown.style.bottom = 'auto';
-        } else {
-          dropdown.style.bottom = (window.innerHeight - rect.top) + 'px';
-          dropdown.style.left = (rect.right + 20) + 'px';
-          dropdown.style.top = 'auto';
-          dropdown.style.right = 'auto';
-        }
-        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-      });
-    });
-
     // Fetch stats
     fetch(`${API_BASE}/user/stats`, {
       method: 'POST',
@@ -2202,6 +2179,26 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stat-list').innerText = data.stats.list;
       }
     }).catch(e => console.error('Errore stats:', e));
+
+    avatars.forEach(avatar => {
+      avatar.style.cursor = 'pointer';
+      avatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const rect = avatar.getBoundingClientRect();
+        if (window.innerWidth <= 768) {
+          dropdown.style.top = (rect.bottom + 10) + 'px';
+          dropdown.style.right = '20px';
+          dropdown.style.left = 'auto';
+          dropdown.style.bottom = 'auto';
+        } else {
+          dropdown.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+          dropdown.style.left = (rect.right + 20) + 'px';
+          dropdown.style.top = 'auto';
+          dropdown.style.right = 'auto';
+        }
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      });
+    });
 
     document.addEventListener('click', (e) => {
       if (!dropdown.contains(e.target)) {
@@ -2441,7 +2438,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const gradientOverlay = document.createElement('div');
     gradientOverlay.style.cssText = `
-      position: fixed; z-index: 10001; top:0; left:0; right:0; bottom:0; pointer-events: none;
+      position: absolute; top:0; left:0; right:0; bottom:0; pointer-events: none;
       background: linear-gradient(0deg, var(--bg-color, #03030f) 0%, rgba(3,3,15,0) 40%);
     `;
     previewArea.appendChild(gradientOverlay);
